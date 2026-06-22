@@ -1,0 +1,20 @@
+{
+  "formatVersion": 1,
+  "passTypeIdentifier": "pass.com.exit13.club",
+  "teamIdentifier": "REPLACE_TEAM_ID",
+  "organizationName": "EXIT 13",
+  "description": "Клубная карта EXIT 13",
+  "serialNumber": "TEMPLATE",
+  "backgroundColor": "rgb(7,7,10)",
+  "foregroundColor": "rgb(204,255,0)",
+  "labelColor": "rgb(155,155,170)",
+  "logoText": "EXIT 13",
+  "sharingProhibited": true,
+  "storeCard": {
+    "headerFields": [],
+    "primaryFields": [],
+    "secondaryFields": [],
+    "auxiliaryFields": [],
+    "backFields": []
+  }
+}

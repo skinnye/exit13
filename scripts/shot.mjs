@@ -2,7 +2,7 @@ import puppeteer from 'puppeteer-core'
 import { mkdirSync } from 'node:fs'
 
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
-const URL = 'http://127.0.0.1:5180/'
+const URL = 'http://127.0.0.1:5182/'
 const OUT = 'C:/Temp/exit13'
 mkdirSync(OUT, { recursive: true })
 
