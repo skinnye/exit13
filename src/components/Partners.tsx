@@ -195,8 +195,13 @@ export default function Partners() {
             {[
               ['Сайт', <a key="site" href="https://exit13.space" className="text-acid underline">exit13.space</a>],
               ['Приложение', <span key="app" className="text-white/70">iOS (TestFlight) / Android (APK) — по запросу</span>],
+              ['Документы', <span key="docs" className="flex flex-wrap gap-x-4 gap-y-1">
+                <a href={asset('privacy.html')} className="text-acid underline">Политика конфиденциальности</a>
+                <a href={asset('terms.html')} className="text-acid underline">Пользовательское соглашение</a>
+              </span>],
+              ['Поддержка', <span key="sup" className="text-white/80"><Fill>e-mail / @username — заполнить</Fill> · {VENUE.phone}</span>],
               ['Адрес', <span key="addr" className="text-white/70">{`${VENUE.city}, ${VENUE.address}`}</span>],
-              ['Контакт', <a key="tg" href={VENUE.tg} className="text-acid underline">Telegram</a>],
+              ['Контакт', <a key="tg" href={VENUE.tg} className="text-acid underline">Telegram-канал</a>],
             ].map(([k, v], i) => (
               <div
                 key={i}

@@ -1,5 +1,6 @@
 import Marquee from './Marquee'
 import { VENUE } from '../data'
+import { asset } from '../lib/asset'
 
 export default function Footer() {
   return (
@@ -38,7 +39,15 @@ export default function Footer() {
 
           <div className="mt-10 flex flex-col sm:flex-row justify-between gap-4 font-mono text-xs text-white/40">
             <div>EXIT 13 · {VENUE.address} · {VENUE.city} · {VENUE.door}</div>
-            <div>© 2026 · концепт-сайт</div>
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              <a href={asset('privacy.html')} className="transition-colors hover:text-acid">
+                Политика конфиденциальности
+              </a>
+              <a href={asset('terms.html')} className="transition-colors hover:text-acid">
+                Пользовательское соглашение
+              </a>
+              <span>© 2026</span>
+            </div>
           </div>
         </div>
       </div>

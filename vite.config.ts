@@ -13,6 +13,8 @@ export default defineConfig(({ command }) => ({
       input: {
         main: 'index.html',
         partners: 'partners.html',
+        privacy: 'privacy.html',
+        terms: 'terms.html',
       },
     },
   },
