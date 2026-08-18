@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useRef } from 'react'
 import {
   motion,
   useMotionValue,
   useReducedMotion,
+  useScroll,
   useSpring,
   useTransform,
   type MotionStyle,
@@ -98,113 +99,16 @@ function Phone({ src, alt, elevated, reduce, delay }: { src: string; alt: string
   )
 }
 
-// ── Форма выпуска карты в Apple Wallet ────────────────────────────
-const WALLET_API = (import.meta.env as Record<string, string | undefined>).VITE_WALLET_API
-
-function WalletBadge({ onClick, busy }: { onClick: () => void; busy?: boolean }) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={busy}
-      className="inline-flex items-center gap-2.5 rounded-xl border border-white/20 bg-black px-5 py-3 text-white transition-colors hover:border-white/40 disabled:opacity-60"
-    >
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-        <path d="M17.543 12.804c-.024-2.43 1.984-3.596 2.074-3.654-1.13-1.654-2.888-1.88-3.51-1.905-1.495-.151-2.916.88-3.673.88-.755 0-1.92-.858-3.158-.834-1.625.024-3.123.945-3.958 2.4-1.688 2.926-.43 7.26 1.21 9.64.802 1.165 1.756 2.471 3.006 2.425 1.206-.048 1.662-.779 3.12-.779 1.456 0 1.868.779 3.142.755 1.297-.024 2.118-1.187 2.913-2.355.918-1.351 1.296-2.66 1.32-2.728-.029-.013-2.533-.973-2.557-3.86zM15.1 5.43c.667-.81 1.117-1.935.994-3.056-.96.039-2.122.64-2.812 1.448-.618.717-1.16 1.863-1.014 2.962 1.07.083 2.165-.544 2.832-1.354z" />
-      </svg>
-      <span className="text-left leading-tight">
-        <span className="block text-[0.6rem] text-white/70">Добавить в</span>
-        <span className="-mt-0.5 block font-semibold">Apple Wallet</span>
-      </span>
-    </button>
-  )
-}
-
-function Form() {
-  const [sent, setSent] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const [f, setF] = useState({ name: '', phone: '', bday: '' })
-  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF((p) => ({ ...p, [k]: e.target.value }))
-
-  const issuePass = async (): Promise<boolean> => {
-    if (!WALLET_API) return false
-    setBusy(true)
-    try {
-      const r = await fetch(`${WALLET_API}/api/issue`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(f),
-      })
-      if (!r.ok) throw new Error('issue failed')
-      const blob = await r.blob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'exit13.pkpass'
-      a.click()
-      URL.revokeObjectURL(url)
-      return true
-    } catch {
-      return false
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    await issuePass()
-    setSent(true)
-  }
-
-  const field =
-    'w-full bg-void/60 border border-white/15 px-4 py-3.5 text-white placeholder:text-white/35 focus:outline-none focus:border-acid/60 transition-colors rounded-sm'
-
-  if (sent) {
-    return (
-      <div className="rounded-xl border border-acid/30 bg-acid/5 px-6 py-10 text-center">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 200, damping: 12 }}
-          className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-acid text-3xl font-black text-void"
-        >
-          ✓
-        </motion.div>
-        <h4 className="mt-4 font-display text-2xl text-white">Карта готова</h4>
-        <p className="mx-auto mt-2 max-w-xs text-sm text-white/65">
-          {WALLET_API
-            ? 'Файл карты скачался — открой его на iPhone, чтобы добавить в Apple Wallet.'
-            : 'Карта оформлена. Добавь её в Apple Wallet кнопкой ниже (активна после подключения бэкенда).'}
-        </p>
-        <div className="mt-5 flex justify-center">
-          <WalletBadge busy={busy} onClick={async () => { if (!(await issuePass())) alert('Wallet подключается после настройки бэкенда.') }} />
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <form onSubmit={submit} className="space-y-3">
-      <input className={field} placeholder="Имя" required value={f.name} onChange={set('name')} />
-      <input className={field} placeholder="Телефон" type="tel" required value={f.phone} onChange={set('phone')} />
-      <label className="block">
-        <span className="font-mono text-[0.62rem] uppercase tracking-widest text-white/40">Дата рождения (для подарка)</span>
-        <input className={`${field} mt-1`} type="date" value={f.bday} onChange={set('bday')} />
-      </label>
-      <button type="submit" disabled={busy} className="btn btn-acid w-full !py-4 disabled:opacity-60">
-        {busy ? 'Выпускаем…' : 'Оформить и добавить в Wallet'}
-      </button>
-      <p className="pt-1 text-center font-mono text-[0.62rem] text-white/40">
-        Нажимая, вы соглашаетесь на обработку персональных данных (152-ФЗ).
-      </p>
-    </form>
-  )
-}
-
 // ── Раздел: клубная карта + приложение в одном ────────────────────
 export default function ClubApp() {
   const reduce = useReducedMotion()
   const viewport = { once: true, margin: '-12%' }
+
+  // Скролл-параллакс: карта и телефоны едут в противофазе, создавая глубину.
+  const rowRef = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({ target: rowRef, offset: ['start end', 'end start'] })
+  const phonesY = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [46, -46])
+  const cardY = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [-24, 24])
 
   return (
     <section id="club" className="section relative overflow-hidden">
@@ -234,16 +138,18 @@ export default function ClubApp() {
           <p className="mt-5 text-lg text-white/70">{CLUBAPP.intro}</p>
         </motion.div>
 
-        {/* Карта + телефоны */}
-        <div className="mb-16 grid items-center gap-12 lg:grid-cols-2">
-          <motion.div
-            initial={{ opacity: 0, y: 32, rotateY: reduce ? 0 : -10 }}
-            whileInView={{ opacity: 1, y: 0, rotateY: 0 }}
-            viewport={viewport}
-            transition={{ duration: 0.85, ease: EASE }}
-            style={{ perspective: 1200 }}
-          >
-            <NeonCard />
+        {/* Карта + телефоны (со скролл-параллаксом) */}
+        <div ref={rowRef} className="mb-16 grid items-center gap-12 lg:grid-cols-2">
+          <motion.div style={{ y: cardY }}>
+            <motion.div
+              initial={{ opacity: 0, y: 32, rotateY: reduce ? 0 : -10 }}
+              whileInView={{ opacity: 1, y: 0, rotateY: 0 }}
+              viewport={viewport}
+              transition={{ duration: 0.85, ease: EASE }}
+              style={{ perspective: 1200 }}
+            >
+              <NeonCard />
+            </motion.div>
             <div className="mt-7 flex flex-wrap gap-3">
               {CLUBAPP.stores.map((s) => (
                 <div key={s.name} className="inline-flex items-center gap-2 rounded-sm border border-white/15 bg-ink px-4 py-3">
@@ -254,16 +160,18 @@ export default function ClubApp() {
             </div>
           </motion.div>
 
-          <motion.div
-            variants={stagger}
-            initial="hidden"
-            whileInView="show"
-            viewport={viewport}
-            className="flex items-center justify-center gap-3 sm:gap-5"
-          >
-            {CLUBAPP.screens.map((s, i) => (
-              <Phone key={s.src} src={asset(s.src)} alt={s.alt} elevated={i === 1} reduce={reduce} delay={i * 0.6} />
-            ))}
+          <motion.div style={{ y: phonesY }}>
+            <motion.div
+              variants={stagger}
+              initial="hidden"
+              whileInView="show"
+              viewport={viewport}
+              className="flex items-center justify-center gap-3 sm:gap-5"
+            >
+              {CLUBAPP.screens.map((s, i) => (
+                <Phone key={s.src} src={asset(s.src)} alt={s.alt} elevated={i === 1} reduce={reduce} delay={i * 0.6} />
+              ))}
+            </motion.div>
           </motion.div>
         </div>
 
@@ -278,36 +186,33 @@ export default function ClubApp() {
           {CLUBAPP.features.map((f) => (
             <motion.div key={f.t} variants={rise} className="group bg-void p-6 transition-colors hover:bg-panel">
               <div className="font-display text-lg text-acid">{f.t}</div>
+              <span className="mt-2 block h-px w-8 origin-left scale-x-0 bg-acid transition-transform duration-300 group-hover:scale-x-100" />
               <p className="mt-1.5 text-sm text-white/60">{f.d}</p>
             </motion.div>
           ))}
         </motion.div>
 
-        {/* Оформление карты */}
-        <div className="mt-16 grid items-start gap-10 lg:grid-cols-2">
-          <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={viewport} transition={{ duration: 0.7, ease: EASE }}>
-            <h3 className="font-display text-3xl text-white sm:text-4xl">
-              Оформи карту <span className="text-acid">за минуту</span>
+        {/* CTA: карта живёт в приложении */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={viewport}
+          transition={{ duration: 0.7, ease: EASE }}
+          className="mt-14 flex flex-col items-start justify-between gap-6 border-t border-white/8 pt-10 sm:flex-row sm:items-center"
+        >
+          <div>
+            <h3 className="font-display text-2xl text-white sm:text-3xl">
+              Карта — в <span className="text-acid">приложении</span>
             </h3>
-            <p className="mt-4 max-w-md text-white/60">
-              Заполни — и карта откроется в Apple Wallet. В приложении она же станет твоим входом, бонусами и оплатой.
+            <p className="mt-2 max-w-md text-white/60">
+              Скоро в App Store, RuStore и Google Play. Пока — оформи на баре или напиши в Telegram.
             </p>
-            <div className="mt-6 flex gap-3">
-              <a href={VENUE.tg} target="_blank" rel="noreferrer" className="btn btn-outline">Telegram</a>
-              <a href={`tel:${VENUE.phoneRaw}`} className="btn btn-outline">Позвонить</a>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={viewport}
-            transition={{ duration: 0.7, ease: EASE, delay: 0.1 }}
-            className="border border-white/10 bg-ink p-6 sm:p-8"
-          >
-            <Form />
-          </motion.div>
-        </div>
+          </div>
+          <div className="flex shrink-0 gap-3">
+            <a href={VENUE.tg} target="_blank" rel="noreferrer" className="btn btn-acid">Telegram</a>
+            <a href={`tel:${VENUE.phoneRaw}`} className="btn btn-outline">Позвонить</a>
+          </div>
+        </motion.div>
       </div>
     </section>
   )
