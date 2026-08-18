@@ -6,6 +6,7 @@ import Bar from './components/Bar'
 import Menu from './components/Menu'
 import Hookah from './components/Hookah'
 import ClubCard from './components/ClubCard'
+import AppSection from './components/AppSection'
 import Gallery from './components/Gallery'
 import Events from './components/Events'
 import ScrollProgress from './components/ScrollProgress'
@@ -41,6 +42,7 @@ export default function App() {
         <Menu />
         <Hookah />
         <ClubCard />
+        <AppSection />
         <Gallery />
         <Events />
         <Residents />
