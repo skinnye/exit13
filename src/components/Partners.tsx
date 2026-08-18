@@ -177,13 +177,11 @@ export default function Partners() {
           </Card>
         </section>
 
-        {/* Реквизиты и контакты */}
+        {/* Контакты */}
         <section className="mt-14">
-          <h2 className="font-display text-2xl text-white sm:text-3xl">Реквизиты и контакты</h2>
+          <h2 className="font-display text-2xl text-white sm:text-3xl">Контакты</h2>
           <div className="mt-6 overflow-hidden rounded-sm border border-white/10">
             {[
-              ['Юрлицо / ИП', <Fill key="ul">название — заполнить</Fill>],
-              ['ИНН / ОГРН', <Fill key="inn">заполнить</Fill>],
               ['Сайт', <a key="site" href="https://exit13.space" className="text-acid underline">exit13.space</a>],
               ['Приложение', <span key="app" className="text-white/70">iOS (TestFlight) / Android (APK) — по запросу</span>],
               ['Адрес', <span key="addr" className="text-white/70">{`${VENUE.city}, ${VENUE.address}`}</span>],
@@ -200,9 +198,6 @@ export default function Partners() {
               </div>
             ))}
           </div>
-          <p className="mt-4 font-mono text-xs text-white/35">
-            Поля <Fill>в рамке</Fill> — заполняет клуб перед отправкой провайдеру.
-          </p>
         </section>
       </main>
 
