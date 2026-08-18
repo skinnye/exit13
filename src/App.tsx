@@ -5,8 +5,7 @@ import Hero from './components/Hero'
 import Bar from './components/Bar'
 import Menu from './components/Menu'
 import Hookah from './components/Hookah'
-import ClubCard from './components/ClubCard'
-import AppSection from './components/AppSection'
+import ClubApp from './components/ClubApp'
 import Gallery from './components/Gallery'
 import Events from './components/Events'
 import ScrollProgress from './components/ScrollProgress'
@@ -41,8 +40,7 @@ export default function App() {
         <Bar />
         <Menu />
         <Hookah />
-        <ClubCard />
-        <AppSection />
+        <ClubApp />
         <Gallery />
         <Events />
         <Residents />
