@@ -1,4 +1,4 @@
-import { Fill, LegalPage, type LegalSection } from './LegalPage'
+import { LegalPage, type LegalSection } from './LegalPage'
 import { VENUE } from '../data'
 
 const UPDATED = '18 августа 2026 г.'
@@ -72,7 +72,9 @@ const sections: LegalSection[] = [
         Оператор — клуб EXIT 13, {VENUE.city}, {VENUE.address}.
       </>,
       <>
-        Поддержка: <Fill>e-mail / @username — заполнить</Fill>, телефон {VENUE.phone}.
+        Поддержка: Telegram-бот{' '}
+        <a href="https://t.me/EXIT13_AUTHBOT" className="text-acid underline">@EXIT13_AUTHBOT</a>,
+        телефон {VENUE.phone}.
       </>,
     ],
   },

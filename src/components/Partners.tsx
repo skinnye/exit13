@@ -199,7 +199,7 @@ export default function Partners() {
                 <a href={asset('privacy.html')} className="text-acid underline">Политика конфиденциальности</a>
                 <a href={asset('terms.html')} className="text-acid underline">Пользовательское соглашение</a>
               </span>],
-              ['Поддержка', <span key="sup" className="text-white/80"><Fill>e-mail / @username — заполнить</Fill> · {VENUE.phone}</span>],
+              ['Поддержка', <span key="sup" className="text-white/80"><a href="https://t.me/EXIT13_AUTHBOT" className="text-acid underline">@EXIT13_AUTHBOT</a> · {VENUE.phone}</span>],
               ['Адрес', <span key="addr" className="text-white/70">{`${VENUE.city}, ${VENUE.address}`}</span>],
               ['Контакт', <a key="tg" href={VENUE.tg} className="text-acid underline">Telegram-канал</a>],
             ].map(([k, v], i) => (
