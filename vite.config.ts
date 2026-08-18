@@ -7,4 +7,13 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/exit13/' : '/',
   plugins: [react(), tailwindcss()],
+  // Мультистраничная сборка: главная + одностраничник для платёжного провайдера.
+  build: {
+    rollupOptions: {
+      input: {
+        main: 'index.html',
+        partners: 'partners.html',
+      },
+    },
+  },
 }))
