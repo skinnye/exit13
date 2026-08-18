@@ -145,6 +145,17 @@ export default function Partners() {
               «Касса» для персонала: приём оплаты картой по QR на входе (та же PSP-страница).
             </Card>
           </div>
+
+          <div className="mt-5 rounded-sm border border-cyan/30 bg-cyan/5 p-4 sm:p-5">
+            <p className="text-sm leading-relaxed text-white/85">
+              <span className="font-semibold text-cyan">Онлайн — только вход и бронь стола.</span>{' '}
+              Алкоголь, еда и напитки через приложение и эквайринг{' '}
+              <span className="font-semibold">не продаются</span> — они реализуются только офлайн, в
+              клубе через кассу. Онлайн-платёж — это оплата услуги (вход на событие или бронь), а не
+              товаров с высоким риском возвратов.
+            </p>
+          </div>
+
           <p className="mt-4 font-mono text-xs text-white/40">
             Средний чек и месячный оборот: <Fill>заполнить</Fill> · Валюта: RUB · Тип — разовые
             платежи (без подписок).
