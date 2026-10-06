@@ -295,3 +295,25 @@ html.lenis body {
 .glitch-logo:hover::after {
   opacity: 0.8;
 }
+
+/* «ЖДЁМ НА ТАНЦПОЛЕ»: Unbounded как в main. Обводка вариативного шрифта показывает
+   внутренние контуры букв — «чертёж»; при наведении контур заливается золотом. */
+.wire-title {
+  font-family: 'Unbounded', 'Arial Black', sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+.wire-stroke {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--color-acid);
+  transition: color 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.wire-title:hover .wire-stroke {
+  color: var(--color-acid);
+}
+@media (prefers-reduced-motion: reduce) {
+  .wire-stroke {
+    transition: none;
+  }
+}

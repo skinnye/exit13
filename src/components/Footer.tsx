@@ -11,10 +11,11 @@ export default function Footer() {
 
       <div className="section">
         <div className="container-x">
-          <h2 className="font-display text-white text-[clamp(2.5rem,9vw,7rem)] leading-[0.92]">
+          {/* Unbounded (вариативный) — его перекрывающиеся контуры дают «чертёжную» обводку, как в main */}
+          <h2 className="wire-title text-white text-[clamp(2.5rem,9vw,7rem)] leading-[0.92]">
             ЖДЁМ
             <br />
-            <span className="text-transparent" style={{ WebkitTextStroke: '1px var(--color-acid)' }}>НА ТАНЦПОЛЕ</span>
+            <span className="wire-stroke">НА ТАНЦПОЛЕ</span>
           </h2>
 
           <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-px overflow-hidden rounded-card bg-line border border-line">
