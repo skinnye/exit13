@@ -1,3 +1,4 @@
+import type React from 'react'
 import { motion } from 'framer-motion'
 import ShaderBG from './ShaderBG'
 import Marquee from './Marquee'
@@ -46,15 +47,21 @@ export default function Hero() {
         </motion.p>
 
         <motion.h1 className="mt-6 sm:mt-8" {...rise(0.18, 28)}>
-          <img
-            src={asset('img/logo.png')}
-            alt=""
-            width={1400}
-            height={294}
-            fetchPriority="high"
-            draggable={false}
-            className="block h-auto w-[min(100%,56rem)] select-none"
-          />
+          {/* глитч при наведении — как в main: голубая и розовая копии логотипа со сдвигом */}
+          <span
+            className="glitch-logo w-[min(100%,56rem)]"
+            style={{ '--logo': `url(${asset('img/logo.png')})` } as React.CSSProperties}
+          >
+            <img
+              src={asset('img/logo.png')}
+              alt=""
+              width={1400}
+              height={294}
+              fetchPriority="high"
+              draggable={false}
+              className="block h-auto w-full select-none"
+            />
+          </span>
           <span className="sr-only">EXIT 13 — ночной клуб в Екатеринбурге</span>
         </motion.h1>
 

@@ -266,3 +266,32 @@ html.lenis body {
 .lenis.lenis-stopped {
   overflow: hidden;
 }
+
+/* Глитч логотипа при наведении — как в main (там был текст с attr(data-text)); теперь
+   логотип — картинка, поэтому копии рисуем маской по самому логотипу. */
+.glitch-logo {
+  position: relative;
+  display: block;
+}
+.glitch-logo::before,
+.glitch-logo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  -webkit-mask: var(--logo) center / contain no-repeat;
+  mask: var(--logo) center / contain no-repeat;
+  opacity: 0;
+  pointer-events: none;
+}
+.glitch-logo::before {
+  background: #19e6ff;
+  transform: translate(-2px, -1px);
+}
+.glitch-logo::after {
+  background: #ff1f6b;
+  transform: translate(2px, 1px);
+}
+.glitch-logo:hover::before,
+.glitch-logo:hover::after {
+  opacity: 0.8;
+}
