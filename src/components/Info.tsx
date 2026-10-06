@@ -1,12 +1,11 @@
 import { CLUBAPP, HOURS, VENUE } from '../data'
 import Reveal from './Reveal'
 
-// Метка — на вход в клуб (те же координаты, что у гео-подсказки Wallet-карты), а не
-// поиск по адресу: в доме 8 Марта, 13 много организаций, и поиск ставит метку на дом.
-// Будет карточка клуба в Яндекс Картах — заменить на /map-widget/v1/org/<slug>/<id>/.
-const CLUB = '60.60051496574278,56.83670196221592' // долгота,широта
-const mapSrc = `https://yandex.ru/map-widget/v1/?ll=${CLUB}&z=18&pt=${CLUB},pm2rdl`
-const mapLink = `https://yandex.ru/maps/?ll=${CLUB}&z=18&pt=${CLUB},pm2rdl`
+// Карточка клуба в Яндекс Картах (организация «Exit13»): метка на клубе, а не на доме
+// 8 Марта, 13 (там много организаций), и сразу — часы, телефон, отзывы, «Как добраться».
+const YA_ORG = 'exit13/143006228461'
+const mapSrc = `https://yandex.ru/map-widget/v1/org/${YA_ORG}/?ll=60.600322,56.836510&z=17`
+const mapLink = `https://yandex.ru/maps/org/${YA_ORG}/`
 
 export default function Info() {
   return (
