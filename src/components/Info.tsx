@@ -1,10 +1,12 @@
 import { CLUBAPP, HOURS, VENUE } from '../data'
 import Reveal from './Reveal'
 
-const mapSrc =
-  'https://yandex.ru/map-widget/v1/?text=' +
-  encodeURIComponent('Екатеринбург, улица 8 Марта, 13') +
-  '&z=16'
+// Метка — на вход в клуб (те же координаты, что у гео-подсказки Wallet-карты), а не
+// поиск по адресу: в доме 8 Марта, 13 много организаций, и поиск ставит метку на дом.
+// Будет карточка клуба в Яндекс Картах — заменить на /map-widget/v1/org/<slug>/<id>/.
+const CLUB = '60.60051496574278,56.83670196221592' // долгота,широта
+const mapSrc = `https://yandex.ru/map-widget/v1/?ll=${CLUB}&z=18&pt=${CLUB},pm2rdl`
+const mapLink = `https://yandex.ru/maps/?ll=${CLUB}&z=18&pt=${CLUB},pm2rdl`
 
 export default function Info() {
   return (
@@ -67,7 +69,7 @@ export default function Info() {
               <div className="font-mono text-xs text-dim mt-1">{VENUE.metro}</div>
             </div>
             <a
-              href={'https://yandex.ru/maps/?text=' + encodeURIComponent('Екатеринбург улица 8 Марта 13')}
+              href={mapLink}
               target="_blank"
               rel="noreferrer"
               className="btn btn-outline btn-sm shrink-0"
