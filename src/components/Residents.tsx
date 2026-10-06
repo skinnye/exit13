@@ -23,10 +23,10 @@ export default function Residents() {
       </div>
 
       <div className="flex flex-col gap-2 select-none">
-        <div className="font-display font-black text-[clamp(2rem,7vw,5.5rem)] text-white leading-none py-1 border-y border-white/10">
+        <div className="font-display font-black text-[clamp(2rem,7vw,5.5rem)] text-white leading-none py-1 border-y border-line">
           <Marquee items={rowA} sep={<span className="text-acid px-2">/</span>} />
         </div>
-        <div className="font-display font-black text-[clamp(2rem,7vw,5.5rem)] text-transparent leading-none py-1 border-b border-white/10"
+        <div className="font-display font-black text-[clamp(2rem,7vw,5.5rem)] text-transparent leading-none py-1 border-b border-line"
           style={{ WebkitTextStroke: '1px rgba(255,255,255,0.35)' }}>
           <Marquee items={rowB} reverse sep={<span className="text-acid px-2">/</span>} />
         </div>

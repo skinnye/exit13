@@ -1,5 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="7" fill="#07070a"/>
-  <rect x="1.5" y="1.5" width="29" height="29" rx="6" fill="none" stroke="#ccff00" stroke-width="1.3"/>
-  <text x="16" y="22" font-family="Arial, sans-serif" font-size="15" font-weight="900" text-anchor="middle" fill="#ccff00">13</text>
+  <!-- EXIT 13 · дизайн v2: золотые «13» (геометрия глифов из логотипа) на void #080808 -->
+  <rect width="32" height="32" rx="7" fill="#080808"/>
+  <g fill="#f0c030" transform="translate(4 6.45) scale(0.0341)">
+    <rect x="0" y="0" width="214" height="116"/>
+    <rect x="71" y="0" width="143" height="560"/>
+    <rect x="320" y="0" width="384" height="116"/>
+    <rect x="463" y="223" width="241" height="115"/>
+    <rect x="561" y="223" width="143" height="337"/>
+    <rect x="320" y="445" width="384" height="115"/>
+  </g>
 </svg>

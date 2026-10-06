@@ -9,28 +9,69 @@ import {
   type MotionStyle,
   type Variants,
 } from 'framer-motion'
-import { CLUBAPP, VENUE } from '../data'
+import { CASHBACK, CLUBAPP, VENUE } from '../data'
 import { asset } from '../lib/asset'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
 const stagger: Variants = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } },
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
 }
 const rise: Variants = {
   hidden: { opacity: 0, y: 28 },
   show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: EASE } },
 }
 
-// ── 3D неоновая карта (tilt на ховер) ─────────────────────────────
-function NeonCard() {
+const rub = (n: number) => `${new Intl.NumberFormat('ru-RU').format(n)} ₽`
+const [FIRST, SECOND] = CASHBACK.levels
+
+// ── Декоративный QR (не сканируется): 21×21 модуль, три «глаза» как у настоящего ──
+const QR_N = 21
+const QR_CELLS: Array<[number, number]> = (() => {
+  const cells: Array<[number, number]> = []
+  let seed = 13
+  const rnd = () => {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff
+    return seed / 0x7fffffff
+  }
+  const finder = (x: number, y: number) =>
+    (x < 8 && y < 8) || (x > QR_N - 9 && y < 8) || (x < 8 && y > QR_N - 9)
+  for (let y = 0; y < QR_N; y++) for (let x = 0; x < QR_N; x++) if (!finder(x, y) && rnd() > 0.5) cells.push([x, y])
+  return cells
+})()
+
+function FakeQR({ className = '' }: { className?: string }) {
+  const eyes: Array<[number, number]> = [
+    [0, 0],
+    [QR_N - 7, 0],
+    [0, QR_N - 7],
+  ]
+  return (
+    <svg viewBox={`-2 -2 ${QR_N + 4} ${QR_N + 4}`} className={className} aria-hidden shapeRendering="crispEdges">
+      <rect x={-2} y={-2} width={QR_N + 4} height={QR_N + 4} fill="#fff" />
+      {eyes.map(([x, y]) => (
+        <g key={`${x}-${y}`}>
+          <rect x={x} y={y} width={7} height={7} fill="#080808" />
+          <rect x={x + 1} y={y + 1} width={5} height={5} fill="#fff" />
+          <rect x={x + 2} y={y + 2} width={3} height={3} fill="#080808" />
+        </g>
+      ))}
+      {QR_CELLS.map(([x, y]) => (
+        <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill="#080808" />
+      ))}
+    </svg>
+  )
+}
+
+// ── Клубная карта как в приложении (v2): золотая рамка, один QR, метрики ──────────
+// Пример — карта нового гостя: приветственные бонусы и стартовый кешбэк.
+function ClubCard() {
   const reduce = useReducedMotion()
   const mx = useMotionValue(0)
   const my = useMotionValue(0)
-  const rx = useSpring(useTransform(my, [-0.5, 0.5], [12, -12]), { stiffness: 150, damping: 15 })
-  const ry = useSpring(useTransform(mx, [-0.5, 0.5], [-14, 14]), { stiffness: 150, damping: 15 })
-  const glareX = useTransform(mx, [-0.5, 0.5], ['0%', '100%'])
+  const rx = useSpring(useTransform(my, [-0.5, 0.5], [8, -8]), { stiffness: 150, damping: 15 })
+  const ry = useSpring(useTransform(mx, [-0.5, 0.5], [-10, 10]), { stiffness: 150, damping: 15 })
 
   const onMove = (e: React.MouseEvent) => {
     if (reduce) return
@@ -45,83 +86,94 @@ function NeonCard() {
 
   return (
     <div style={{ perspective: 1000 }} onMouseMove={onMove} onMouseLeave={onLeave} className="select-none">
-      <motion.div
-        style={{ rotateX: reduce ? 0 : rx, rotateY: reduce ? 0 : ry, transformStyle: 'preserve-3d' } as MotionStyle}
-        className="relative aspect-[1.586/1] w-full overflow-hidden rounded-2xl border border-acid/30 p-6"
+      <motion.figure
+        style={{ rotateX: reduce ? 0 : rx, rotateY: reduce ? 0 : ry } as MotionStyle}
+        className="relative mx-auto max-w-md rounded-card-lg border border-acid bg-panel p-6 sm:p-7"
+        aria-label="Пример клубной карты EXIT 13 в приложении"
       >
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg,#15131f, #0a0a10 60%, #07110f)' }} />
-        <div
-          className="absolute -inset-1 opacity-40 blur-2xl"
-          style={{ background: 'radial-gradient(60% 60% at 20% 10%, #19e6ff55, transparent), radial-gradient(60% 60% at 90% 90%, #ccff0055, transparent)' }}
-        />
-        <motion.div
-          className="pointer-events-none absolute inset-0"
-          style={{ background: useTransform(glareX, (v) => `linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.10) ${v}, transparent 70%)`) }}
-        />
-        <div className="relative flex h-full flex-col justify-between text-white" style={{ transform: 'translateZ(40px)' }}>
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="font-display text-2xl font-black tracking-tight">EXIT<span className="text-acid">13</span></div>
-              <div className="mt-1 font-mono text-[0.6rem] tracking-[0.3em] text-white/60">CLUB CARD</div>
-            </div>
-            <div className="h-8 w-11 rounded-md border border-acid/40 bg-gradient-to-br from-acid/80 to-acid/30" />
-          </div>
+        <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="font-mono text-sm tracking-[0.35em] text-acid sm:text-base">13 · 0000 · EXIT</div>
-            <div className="mt-3 flex items-end justify-between">
-              <div>
-                <div className="font-mono text-[0.55rem] tracking-widest text-white/45">ДЕРЖАТЕЛЬ</div>
-                <div className="font-mono text-sm tracking-widest text-white/85">ВАШЕ ИМЯ</div>
-              </div>
-              <div className="font-mono text-[0.55rem] tracking-widest text-white/45">MEMBER 2026</div>
-            </div>
+            <img src={asset('img/logo.png')} alt="EXIT 13" width={1400} height={294} className="h-6 w-auto" />
+            <div className="mt-2 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-dim">Club card</div>
+          </div>
+          <span className="chip chip-dim">Кешбэк {FIRST.percent}%</span>
+        </div>
+
+        <div className="mx-auto mt-6 w-40 overflow-hidden rounded-2xl sm:w-44">
+          <FakeQR className="block h-auto w-full" />
+        </div>
+        <div className="mt-4 text-center font-mono text-[0.62rem] uppercase tracking-[0.14em] text-fog">
+          Покажи на входе и на баре
+        </div>
+
+        <div className="mt-6 grid grid-cols-2 gap-4 border-t border-line pt-5">
+          <div>
+            <div className="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-dim">Бонусы</div>
+            <div className="mt-1 font-display text-3xl text-acid">{CASHBACK.welcome}</div>
+          </div>
+          <div className="text-right">
+            <div className="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-dim">Кешбэк</div>
+            <div className="mt-1 font-display text-3xl text-white">{FIRST.percent}%</div>
           </div>
         </div>
-      </motion.div>
+        <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-panel2">
+          <div className="h-full w-[6%] rounded-full bg-acid" />
+        </div>
+        <figcaption className="mt-2.5 flex justify-between font-mono text-[0.6rem] uppercase tracking-[0.12em]">
+          <span className="text-acid">{FIRST.percent}%</span>
+          <span className="text-dim">
+            до {SECOND.percent}% — {rub(SECOND.from)}
+          </span>
+        </figcaption>
+      </motion.figure>
     </div>
   )
 }
 
-// ── Телефон со скрином: appear-стаггер снаружи, бесконечный «дрейф» внутри ──
-function Phone({ src, alt, elevated, reduce, delay }: { src: string; alt: string; elevated: boolean; reduce: boolean | null; delay: number }) {
+// ── Лестница кешбэка ───────────────────────────────────────────────
+function CashbackLadder() {
+  const max = CASHBACK.levels[CASHBACK.levels.length - 1].percent
   return (
-    <motion.div variants={rise} className={elevated ? 'z-10' : ''}>
-      <motion.div
-        animate={reduce ? undefined : { y: [0, elevated ? -10 : -5, 0] }}
-        transition={reduce ? undefined : { repeat: Infinity, duration: 5.5, ease: 'easeInOut', delay }}
-        className={`relative w-[7rem] shrink-0 rounded-[1.7rem] border border-white/15 bg-black p-1 shadow-[0_24px_70px_-20px_rgba(0,0,0,0.85)] sm:w-[10rem] ${
-          elevated ? 'scale-105' : 'opacity-90'
-        }`}
-      >
-        <img src={src} alt={alt} loading="lazy" className="block w-full rounded-[1.4rem]" />
-      </motion.div>
-    </motion.div>
+    <div className="rounded-card-lg border border-line bg-panel p-6 sm:p-8">
+      <div className="mono-label">Кешбэк бонусами</div>
+      <h3 className="mt-3 font-display text-2xl uppercase text-white sm:text-3xl">Больше покупок — выше процент</h3>
+      <p className="mt-2 text-sm text-fog">
+        Уровень растёт сам — по сумме покупок в клубе по вашей карте.
+      </p>
+      <ol className="mt-6 space-y-3">
+        {CASHBACK.levels.map((l) => (
+          <li key={l.percent} className="grid grid-cols-[3.25rem_1fr_8.5rem] items-center gap-3 sm:gap-4">
+            <span className="font-display text-2xl text-acid">{l.percent}%</span>
+            <span className="h-1.5 overflow-hidden rounded-full bg-panel2">
+              <span className="block h-full rounded-full bg-acid" style={{ width: `${(l.percent / max) * 100}%` }} />
+            </span>
+            <span className="text-right font-mono text-xs text-fog">
+              {l.from === 0 ? 'с первой покупки' : `от ${rub(l.from)}`}
+            </span>
+          </li>
+        ))}
+      </ol>
+      <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-line pt-5">
+        <span className="chip chip-acid">+{CASHBACK.welcome} бонусов</span>
+        <span className="text-sm text-fog">при регистрации в приложении</span>
+      </div>
+    </div>
   )
 }
 
-// ── Раздел: клубная карта + приложение в одном ────────────────────
+// ── Раздел: клубная карта + приложение ─────────────────────────────
 export default function ClubApp() {
   const reduce = useReducedMotion()
   const viewport = { once: true, margin: '-12%' }
 
-  // Скролл-параллакс: карта и телефоны едут в противофазе, создавая глубину.
+  // Лёгкий скролл-параллакс: карта и лестница едут в противофазе.
   const rowRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: rowRef, offset: ['start end', 'end start'] })
-  const phonesY = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [46, -46])
-  const cardY = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [-24, 24])
+  const ladderY = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [30, -30])
+  const cardY = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [-18, 18])
 
   return (
     <section id="club" className="section relative overflow-hidden">
-      {/* фоновые свечения */}
-      <div
-        className="pointer-events-none absolute left-1/4 top-0 h-[45rem] w-[45rem] -translate-x-1/2 rounded-full opacity-10 blur-3xl"
-        style={{ background: 'radial-gradient(circle, #ccff00, transparent 60%)' }}
-      />
-      <div
-        className="pointer-events-none absolute -bottom-24 right-0 h-[38rem] w-[38rem] rounded-full opacity-10 blur-3xl"
-        style={{ background: 'radial-gradient(circle, #19e6ff, transparent 60%)' }}
-      />
-
       <div className="container-x relative">
         {/* Заголовок */}
         <motion.div
@@ -138,79 +190,92 @@ export default function ClubApp() {
           <p className="mt-5 text-lg text-white/70">{CLUBAPP.intro}</p>
         </motion.div>
 
-        {/* Карта + телефоны (со скролл-параллаксом) */}
-        <div ref={rowRef} className="mb-16 grid items-center gap-12 lg:grid-cols-2">
+        {/* Карта + лестница кешбэка */}
+        <div ref={rowRef} className="mb-16 grid items-center gap-10 lg:grid-cols-2 lg:gap-12">
           <motion.div style={{ y: cardY }}>
             <motion.div
-              initial={{ opacity: 0, y: 32, rotateY: reduce ? 0 : -10 }}
+              initial={{ opacity: 0, y: 32, rotateY: reduce ? 0 : -8 }}
               whileInView={{ opacity: 1, y: 0, rotateY: 0 }}
               viewport={viewport}
               transition={{ duration: 0.85, ease: EASE }}
               style={{ perspective: 1200 }}
             >
-              <NeonCard />
+              <ClubCard />
             </motion.div>
-            <div className="mt-7 flex flex-wrap gap-3">
-              {CLUBAPP.stores.map((s) => (
-                <div key={s.name} className="inline-flex items-center gap-2 rounded-sm border border-white/15 bg-ink px-4 py-3">
-                  <span className="font-mono text-sm text-white/85">{s.name}</span>
-                  <span className="font-mono text-[0.58rem] uppercase tracking-widest text-acid">{s.status}</span>
-                </div>
-              ))}
-            </div>
           </motion.div>
 
-          <motion.div style={{ y: phonesY }}>
+          <motion.div style={{ y: ladderY }}>
             <motion.div
-              variants={stagger}
-              initial="hidden"
-              whileInView="show"
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={viewport}
-              className="flex items-center justify-center gap-3 sm:gap-5"
+              transition={{ duration: 0.8, ease: EASE, delay: 0.1 }}
             >
-              {CLUBAPP.screens.map((s, i) => (
-                <Phone key={s.src} src={asset(s.src)} alt={s.alt} elevated={i === 1} reduce={reduce} delay={i * 0.6} />
-              ))}
+              <CashbackLadder />
             </motion.div>
           </motion.div>
         </div>
 
-        {/* Привилегии карты + возможности приложения — вместе */}
+        {/* Что умеет приложение */}
         <motion.div
           variants={stagger}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: '-8%' }}
-          className="grid gap-px border border-white/8 bg-white/8 sm:grid-cols-2 lg:grid-cols-3"
+          className="grid gap-px overflow-hidden rounded-card border border-line bg-line sm:grid-cols-2 lg:grid-cols-3"
         >
           {CLUBAPP.features.map((f) => (
             <motion.div key={f.t} variants={rise} className="group bg-void p-6 transition-colors hover:bg-panel">
-              <div className="font-display text-lg text-acid">{f.t}</div>
+              <h3 className="font-display text-lg uppercase text-acid">{f.t}</h3>
               <span className="mt-2 block h-px w-8 origin-left scale-x-0 bg-acid transition-transform duration-300 group-hover:scale-x-100" />
               <p className="mt-1.5 text-sm text-white/60">{f.d}</p>
             </motion.div>
           ))}
         </motion.div>
 
-        {/* CTA: карта живёт в приложении */}
+        {/* Оплата + сторы */}
+        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          <div className="rounded-card border border-line bg-panel p-6">
+            <div className="font-mono text-xs uppercase tracking-[0.12em] text-dim">Оплата входа</div>
+            <p className="mt-2 text-white">{CLUBAPP.payment.now}</p>
+            <p className="mt-1 text-fog">{CLUBAPP.payment.soon}</p>
+          </div>
+          <div className="rounded-card border border-line bg-panel p-6">
+            <div className="font-mono text-xs uppercase tracking-[0.12em] text-dim">Где скачать</div>
+            <div className="mt-3 flex flex-wrap gap-2.5">
+              {CLUBAPP.stores.map((s) => (
+                <span key={s.name} className="chip chip-dark">
+                  <span className="text-text">{s.name}</span>
+                  <span className="text-acid">{s.status}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* CTA */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={viewport}
           transition={{ duration: 0.7, ease: EASE }}
-          className="mt-14 flex flex-col items-start justify-between gap-6 border-t border-white/8 pt-10 sm:flex-row sm:items-center"
+          className="mt-14 flex flex-col items-start justify-between gap-6 border-t border-line pt-10 sm:flex-row sm:items-center"
         >
           <div>
-            <h3 className="font-display text-2xl text-white sm:text-3xl">
-              Карта — в <span className="text-acid">приложении</span>
+            <h3 className="font-display text-2xl uppercase text-white sm:text-3xl">
+              Приложение — в <span className="text-acid">закрытом тесте</span>
             </h3>
             <p className="mt-2 max-w-md text-white/60">
-              Скоро в App Store, RuStore и Google Play. Пока — оформи на баре или напиши в Telegram.
+              Скоро в App Store, Google Play и RuStore. О запуске расскажем в Telegram-канале клуба.
             </p>
           </div>
-          <div className="flex shrink-0 gap-3">
-            <a href={VENUE.tg} target="_blank" rel="noreferrer" className="btn btn-acid">Telegram</a>
-            <a href={`tel:${VENUE.phoneRaw}`} className="btn btn-outline">Позвонить</a>
+          <div className="flex shrink-0 flex-wrap gap-3">
+            <a href={VENUE.tg} target="_blank" rel="noreferrer" className="btn btn-acid">
+              Telegram
+            </a>
+            <a href={`tel:${VENUE.phoneRaw}`} className="btn btn-outline">
+              Позвонить
+            </a>
           </div>
         </motion.div>
       </div>

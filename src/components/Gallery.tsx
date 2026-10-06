@@ -61,7 +61,7 @@ export default function Gallery() {
             onClick={() => setOpen(null)}
           >
             <button
-              className="absolute top-5 right-5 w-12 h-12 grid place-items-center border border-white/15 text-white text-2xl"
+              className="absolute top-5 right-5 w-12 h-12 grid place-items-center rounded-full border border-outline bg-panel2 text-white text-2xl"
               onClick={() => setOpen(null)} aria-label="Закрыть"
             >
               ×

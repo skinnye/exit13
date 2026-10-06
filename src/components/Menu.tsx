@@ -25,10 +25,9 @@ export default function Menu() {
             <button
               key={m.group}
               onClick={() => setTab(i)}
-              className={`font-mono text-xs uppercase tracking-widest px-4 py-2.5 rounded-sm border transition-colors ${
-                i === tab
-                  ? 'bg-acid text-void border-acid'
-                  : 'border-white/15 text-white/65 hover:text-acid hover:border-acid/50'
+              aria-pressed={i === tab}
+              className={`chip transition-colors ${
+                i === tab ? 'chip-acid' : 'chip-dark hover:border-acid/50 hover:text-acid'
               }`}
             >
               {m.group}
@@ -47,12 +46,12 @@ export default function Menu() {
           >
             {g.subs.map((s) => (
               <div key={s.sub}>
-                <h3 className="font-mono text-acid text-xs uppercase tracking-[0.22em] mb-3 pb-2 border-b border-acid/20">
+                <h3 className="font-mono text-acid text-xs uppercase tracking-[0.12em] mb-3 pb-2 border-b border-acid/20">
                   {s.sub}
                 </h3>
                 <div>
                   {s.items.map((it) => (
-                    <div key={it.name} className="py-3 border-b border-white/8">
+                    <div key={it.name} className="py-3 border-b border-line">
                       <div className="flex items-baseline gap-3">
                         <span className="text-white/90">{it.name}</span>
                         <span className="flex-1 border-b border-dotted border-white/15 translate-y-[-3px]" />
@@ -69,7 +68,7 @@ export default function Menu() {
         </AnimatePresence>
 
         <p className="mt-10 font-mono text-xs text-white/40">
-          Полное меню с фото и составами — на exit13.space.
+          Меню с ценами — на exit13.space и в приложении EXIT 13.
         </p>
       </div>
     </section>

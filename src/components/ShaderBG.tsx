@@ -1,9 +1,17 @@
 import { useEffect, useRef } from 'react'
 
+// Фон hero: почти чёрный «дым» (#080808) с еле заметным золотым свечением (#f0c030) —
+// дизайн v2, без неона. Анимация только пока hero в кадре и вкладка видима;
+// при prefers-reduced-motion — один статичный кадр.
+
 const VERT = `attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }`
 
 const FRAG = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
+#else
+precision mediump float;
+#endif
 uniform vec2 u_res;
 uniform float u_time;
 
@@ -19,43 +27,46 @@ float noise(vec2 p){
 }
 float fbm(vec2 p){
   float v = 0.0; float a = 0.5;
-  for(int i=0;i<5;i++){ v += a*noise(p); p *= 2.02; a *= 0.5; }
+  for(int i=0;i<4;i++){ v += a*noise(p); p *= 2.03; a *= 0.5; }
   return v;
 }
 void main(){
   vec2 uv = (gl_FragCoord.xy - 0.5*u_res)/u_res.y;
-  float t = u_time*0.05;
-  vec2 q = vec2(fbm(uv*1.4 + vec2(0.0, t)), fbm(uv*1.4 + vec2(5.2, -t)));
-  float n = fbm(uv*2.0 + q*1.9 + vec2(t*1.4, t*0.8));
+  float t = u_time*0.035;
+  vec2 q = vec2(fbm(uv*1.2 + vec2(0.0, t)), fbm(uv*1.2 + vec2(5.2, -t)));
+  float n = fbm(uv*1.7 + q*1.8 + vec2(t*1.3, t*0.7));
 
-  vec3 c1 = vec3(0.025,0.025,0.04);
-  vec3 c2 = vec3(0.10,0.02,0.20);
-  vec3 mag = vec3(1.0,0.12,0.42);
-  vec3 cyan = vec3(0.10,0.85,1.0);
-  vec3 acid = vec3(0.80,1.0,0.0);
+  vec3 base  = vec3(0.031);                 // void #080808
+  vec3 smoke = vec3(0.085, 0.077, 0.062);   // тёплый графит
+  vec3 gold  = vec3(0.941, 0.753, 0.188);   // acid #f0c030
 
-  vec3 col = mix(c1, c2, smoothstep(0.18,0.62,n));
-  col = mix(col, mag*0.85, smoothstep(0.55,0.82,n)*0.55);
-  col += cyan * pow(smoothstep(0.70,0.96,n), 2.0) * 0.45;
+  vec3 col = mix(base, smoke, smoothstep(0.30, 0.80, n));
 
-  // тонкая кислотная "лазерная" линия
-  float line = smoothstep(0.018, 0.0, abs(uv.y - 0.28*sin(uv.x*2.2 + u_time*0.4)));
-  col += acid * line * 0.18;
+  // мягкий золотой свет сверху справа — как прожектор сквозь дым
+  vec2 lp = vec2(0.62 + 0.12*sin(u_time*0.06), 0.42);
+  float glow = exp(-2.1*length((uv - lp)*vec2(0.7, 1.1)));
+  col += gold * glow * (0.35 + 0.65*smoothstep(0.35, 0.85, n)) * 0.15;
+  // редкие тёплые прожилки в самых плотных клубах
+  col += gold * pow(smoothstep(0.62, 0.95, n), 3.0) * 0.05;
 
-  // сканлайны + виньетка
-  col *= 0.9 + 0.1*sin(gl_FragCoord.y*1.4 + u_time*1.6);
-  col *= smoothstep(1.35, 0.15, length(uv));
+  // виньетка + дизеринг против полос на тёмных градиентах
+  col *= smoothstep(1.45, 0.20, length(uv*vec2(0.9, 1.0)));
+  col += (hash(gl_FragCoord.xy + fract(u_time)) - 0.5) / 255.0;
 
   gl_FragColor = vec4(col, 1.0);
 }
 `
 
+const FALLBACK_BG = 'radial-gradient(90% 70% at 75% 0%, #1a160c, #080808 70%)'
+
 function compile(gl: WebGLRenderingContext, type: number, src: string) {
-  const sh = gl.createShader(type)!
+  const sh = gl.createShader(type)
+  if (!sh) return null
   gl.shaderSource(sh, src)
   gl.compileShader(sh)
   if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
     console.warn('shader', gl.getShaderInfoLog(sh))
+    gl.deleteShader(sh)
     return null
   }
   return sh
@@ -67,22 +78,27 @@ export default function ShaderBG({ className = '' }: { className?: string }) {
   useEffect(() => {
     const canvas = ref.current
     if (!canvas) return
-    const gl = (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null
-    if (!gl) {
-      canvas.style.background = 'radial-gradient(120% 80% at 50% 0%, #18062a, #07070a 70%)'
-      return
+    const fallback = () => {
+      canvas.style.background = FALLBACK_BG
     }
+
+    const gl = canvas.getContext('webgl', {
+      alpha: false,
+      antialias: false,
+      depth: false,
+      stencil: false,
+      powerPreference: 'low-power',
+    })
+    if (!gl) return fallback()
 
     const vs = compile(gl, gl.VERTEX_SHADER, VERT)
     const fs = compile(gl, gl.FRAGMENT_SHADER, FRAG)
-    if (!vs || !fs) {
-      canvas.style.background = 'radial-gradient(120% 80% at 50% 0%, #18062a, #07070a 70%)'
-      return
-    }
-    const prog = gl.createProgram()!
+    const prog = vs && fs ? gl.createProgram() : null
+    if (!vs || !fs || !prog) return fallback()
     gl.attachShader(prog, vs)
     gl.attachShader(prog, fs)
     gl.linkProgram(prog)
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return fallback()
     gl.useProgram(prog)
 
     const buf = gl.createBuffer()
@@ -97,9 +113,11 @@ export default function ShaderBG({ className = '' }: { className?: string }) {
 
     const mobile = window.matchMedia('(max-width: 768px)').matches
     const dpr = Math.min(window.devicePixelRatio || 1, mobile ? 1 : 1.25)
+    const reducedMq = window.matchMedia('(prefers-reduced-motion: reduce)')
+
     const resize = () => {
-      const w = Math.floor(canvas.clientWidth * dpr)
-      const h = Math.floor(canvas.clientHeight * dpr)
+      const w = Math.max(1, Math.floor(canvas.clientWidth * dpr))
+      const h = Math.max(1, Math.floor(canvas.clientHeight * dpr))
       if (canvas.width !== w || canvas.height !== h) {
         canvas.width = w
         canvas.height = h
@@ -107,33 +125,51 @@ export default function ShaderBG({ className = '' }: { className?: string }) {
       gl.viewport(0, 0, canvas.width, canvas.height)
       gl.uniform2f(uRes, canvas.width, canvas.height)
     }
-    resize()
-    window.addEventListener('resize', resize)
 
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     let raf = 0
-    let running = true
+    let inView = true
     const start = performance.now()
-    const render = (now: number) => {
-      if (!running) return
-      resize()
-      gl.uniform1f(uTime, (now - start) / 1000)
+    const animating = () => inView && !document.hidden && !reducedMq.matches
+    const frame = (now: number) => {
+      raf = 0
+      gl.uniform1f(uTime, reducedMq.matches ? 0 : (now - start) / 1000)
       gl.drawArrays(gl.TRIANGLES, 0, 3)
-      if (!reduced) raf = requestAnimationFrame(render)
+      if (animating()) raf = requestAnimationFrame(frame)
     }
-    raf = requestAnimationFrame(render)
+    // Рисует хотя бы один кадр (статичный режим/после ресайза), дальше — если можно анимировать.
+    const kick = () => {
+      if (!raf) raf = requestAnimationFrame(frame)
+    }
 
+    resize()
+    kick()
+
+    const ro = new ResizeObserver(() => {
+      resize()
+      kick()
+    })
+    ro.observe(canvas)
+    const io = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting
+      if (inView) kick()
+    })
+    io.observe(canvas)
     const onVis = () => {
-      running = !document.hidden && !reduced
-      if (running) raf = requestAnimationFrame(render)
+      if (!document.hidden) kick()
     }
     document.addEventListener('visibilitychange', onVis)
+    reducedMq.addEventListener('change', kick)
 
     return () => {
-      running = false
       cancelAnimationFrame(raf)
-      window.removeEventListener('resize', resize)
+      ro.disconnect()
+      io.disconnect()
       document.removeEventListener('visibilitychange', onVis)
+      reducedMq.removeEventListener('change', kick)
+      gl.deleteBuffer(buf)
+      gl.deleteProgram(prog)
+      gl.deleteShader(vs)
+      gl.deleteShader(fs)
     }
   }, [])
 

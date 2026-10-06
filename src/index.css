@@ -1,56 +1,82 @@
 @import 'tailwindcss';
 
+/*
+  Дизайн-система v2 — та же, что в приложении EXIT 13 (mobile/src/theme.ts).
+  Имена токенов void/ink/panel/panel2/fog/acid сохранены, чтобы компоненты собирались;
+  acid — ЗОЛОТО (#f0c030), имя историческое. Старая палитра (#ccff00, сине-серые) отменена.
+  magenta/cyan оставлены определёнными для совместимости, в новом дизайне не используются.
+*/
 @theme {
-  --font-display: 'Unbounded', 'Arial Black', sans-serif;
-  --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-display: 'Oswald', 'Arial Narrow', 'Roboto Condensed', sans-serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
-  --color-void: #07070a;
-  --color-ink: #0c0d12;
-  --color-panel: #111219;
-  --color-panel2: #15161f;
-  --color-fog: #9b9caa;
-  --color-acid: #ccff00;
+  --color-void: #080808; /* фон */
+  --color-ink: #0c0c0c; /* шапка, модалки, самый тёмный слой */
+  --color-panel: #151515; /* карточки, чипы */
+  --color-panel2: #1e1e1e; /* вторичные кнопки, поля, скелетоны */
+  --color-line: #2a2a2a; /* разделители, рамки карточек */
+  --color-outline: #3d3d3d; /* контур вторичных элементов */
+  --color-text: #e8e8e8; /* основной текст */
+  --color-fog: #aaaaaa; /* вторичный текст */
+  --color-dim: #888888; /* приглушённый текст */
+  --color-acid: #f0c030; /* главный акцент — золото */
+  --color-acid-dim: #2b240e; /* приглушённая золотая плашка: уровень, теги */
+  --color-acidDim: #2b240e; /* то же, имя как в theme.ts приложения */
   --color-magenta: #ff1f6b;
   --color-cyan: #19e6ff;
+
+  /* Радиусы v2: карточки/поля 18, крупные карты 24, кнопки и чипы — пилюли */
+  --radius-card: 18px;
+  --radius-card-lg: 24px;
 }
 
 @layer base {
+  html {
+    color-scheme: dark;
+    scrollbar-color: var(--color-line) var(--color-void);
+  }
   html,
   body {
     margin: 0;
-    background: #07070a;
-    color: #e7e7ee;
+    background: var(--color-void);
+    color: var(--color-text);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   body {
     overflow-x: hidden;
   }
   ::selection {
-    background: #ccff00;
-    color: #07070a;
+    background: var(--color-acid);
+    color: var(--color-void);
   }
   h1,
   h2,
   h3 {
     font-family: var(--font-display);
-    font-weight: 800;
-    line-height: 0.95;
-    letter-spacing: -0.02em;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-acid);
+    outline-offset: 3px;
   }
   ::-webkit-scrollbar {
     width: 10px;
   }
   ::-webkit-scrollbar-track {
-    background: #07070a;
+    background: var(--color-void);
   }
   ::-webkit-scrollbar-thumb {
-    background: #1c1d27;
+    background: var(--color-line);
     border-radius: 99px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #2a2b38;
+    background: var(--color-outline);
   }
 }
 
@@ -67,51 +93,99 @@
     }
   }
 
+  /* Метка: JetBrains Mono 500, капс, золото */
   .mono-label {
     font-family: var(--font-mono);
+    font-weight: 500;
     font-size: 0.72rem;
-    letter-spacing: 0.28em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #ccff00;
+    color: var(--color-acid);
   }
 
+  /* Кнопка v2 — пилюля ~56px: золото + текст void; вторичная — panel2 с контуром */
   .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    padding: 1rem 1.8rem;
+    gap: 0.6rem;
+    padding: 1.2rem 1.8rem;
     font-family: var(--font-mono);
     font-weight: 500;
-    font-size: 0.82rem;
-    letter-spacing: 0.14em;
+    font-size: 0.8rem;
+    line-height: 1.2;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
+    white-space: nowrap;
     cursor: pointer;
-    border-radius: 2px;
+    border: 1px solid transparent;
+    border-radius: 999px;
     transition:
       transform 0.18s ease,
-      background 0.18s ease,
-      color 0.18s ease,
-      box-shadow 0.18s ease;
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      color 0.18s ease;
+  }
+  .btn:active {
+    transform: translateY(0) scale(0.98);
+  }
+  .btn-sm {
+    padding: 0.7rem 1.2rem;
+    font-size: 0.72rem;
   }
   .btn-acid {
-    background: #ccff00;
-    color: #07070a;
-    box-shadow: 0 0 0 0 rgba(204, 255, 0, 0.5);
+    background: var(--color-acid);
+    border-color: var(--color-acid);
+    color: var(--color-void);
   }
   .btn-acid:hover {
-    box-shadow: 0 0 32px -2px rgba(204, 255, 0, 0.65);
-    transform: translateY(-2px);
+    background: #f6cd4f;
+    border-color: #f6cd4f;
+    transform: translateY(-1px);
   }
   .btn-outline {
-    background: transparent;
-    color: #e7e7ee;
-    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: var(--color-panel2);
+    border-color: var(--color-outline);
+    color: var(--color-text);
   }
   .btn-outline:hover {
-    border-color: #ccff00;
-    color: #ccff00;
-    transform: translateY(-2px);
+    border-color: var(--color-acid);
+    color: var(--color-acid);
+    transform: translateY(-1px);
+  }
+
+  /* Чип v2 — пилюля 32px, mono капсом: acid / dark / dim / outline */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    height: 2rem;
+    padding-inline: 0.9rem;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    border-radius: 999px;
+  }
+  .chip-acid {
+    background: var(--color-acid);
+    color: var(--color-void);
+  }
+  .chip-dark {
+    background: var(--color-panel);
+    border-color: var(--color-line);
+    color: var(--color-fog);
+  }
+  .chip-dim {
+    background: var(--color-acid-dim);
+    color: var(--color-acid);
+  }
+  .chip-outline {
+    border-color: var(--color-outline);
+    color: var(--color-text);
   }
 
   .section {
@@ -119,18 +193,18 @@
   }
 
   .hairline {
-    border-top: 1px solid rgba(255, 255, 255, 0.09);
+    border-top: 1px solid var(--color-line);
   }
 }
 
-/* Зернистость поверх всего */
+/* Зернистость поверх всего — нейтральная, еле заметная */
 .grain::after {
   content: '';
   position: fixed;
   inset: 0;
   z-index: 70;
   pointer-events: none;
-  opacity: 0.05;
+  opacity: 0.04;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -150,28 +224,6 @@
 }
 .marquee-track.rev {
   animation-direction: reverse;
-}
-
-/* Глитч при наведении */
-.glitch {
-  position: relative;
-}
-.glitch:hover::before,
-.glitch:hover::after {
-  content: attr(data-text);
-  position: absolute;
-  inset: 0;
-  clip-path: inset(0 0 0 0);
-}
-.glitch:hover::before {
-  color: #19e6ff;
-  transform: translate(-2px, -1px);
-  opacity: 0.8;
-}
-.glitch:hover::after {
-  color: #ff1f6b;
-  transform: translate(2px, 1px);
-  opacity: 0.8;
 }
 
 /* Reveal */
@@ -195,6 +247,11 @@
   }
   .marquee-track {
     animation: none;
+  }
+  .btn,
+  .btn:hover,
+  .btn:active {
+    transform: none;
   }
 }
 
