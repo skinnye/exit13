@@ -243,12 +243,14 @@ html.lenis body {
 .glitch-logo {
   position: relative;
   display: block;
+  isolation: isolate;
 }
 .glitch-logo::before,
 .glitch-logo::after {
   content: '';
   position: absolute;
   inset: 0;
+  z-index: -1; /* под логотипом: при наведении видны только голубой и розовый края */
   -webkit-mask: var(--logo) center / contain no-repeat;
   mask: var(--logo) center / contain no-repeat;
   opacity: 0;
@@ -290,7 +292,7 @@ html.lenis body {
 }
 
 /* Неоновая вывеска в hero — как на exit13.space: золотой ореол логотипа (4 тени), «дышащее»
-   пятно света за ним, сетка точек и виньетка. Вспышка включения — один раз при загрузке,
+   пятно света за ним и виньетка. Вспышка включения — один раз при загрузке,
    затем редкое мерцание. prefers-reduced-motion — статичный кадр без мерцания. */
 .neon-logo {
   filter: drop-shadow(0 0 6px rgb(255 220 50)) drop-shadow(0 0 22px rgb(240 192 48 / 0.95))
@@ -315,14 +317,6 @@ html.lenis body {
   );
   pointer-events: none;
   animation: glow-breathe 6s ease-in-out 1.8s infinite;
-}
-.hero-dots {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(circle, rgb(240 192 48 / 0.22) 1.2px, transparent 1.2px);
-  background-size: 44px 44px;
-  mask-image: radial-gradient(90% 100%, black 10%, transparent 75%);
-  pointer-events: none;
 }
 .hero-vignette {
   position: absolute;

@@ -5,7 +5,7 @@ import { scrollToId } from '../lib/scroll'
 import { asset } from '../lib/asset'
 
 // Первый экран — неоновая вывеска, как на exit13.space: золотой ореол логотипа, дышащее
-// пятно света, сетка точек и виньетка (стили — .neon-logo/.hero-* в index.css) поверх
+// пятно света и виньетка (стили — .neon-logo/.hero-* в index.css) поверх
 // приглушённого видео танцпола клуба (ролик из Telegram-канала клуба, без звука).
 // prefers-reduced-motion — видео не запускаем, остаётся кадр-постер.
 export default function Hero() {
@@ -37,7 +37,6 @@ export default function Hero() {
       </video>
       <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-void/70 via-void/35 to-void" />
       <div aria-hidden className="hero-light" />
-      <div aria-hidden className="hero-dots" />
       <div aria-hidden className="hero-vignette" />
 
       <div className="container-x relative flex flex-1 flex-col items-center justify-center pb-12 pt-28 text-center sm:pb-16">
