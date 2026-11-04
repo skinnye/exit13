@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { API_BASE, DOCS, EVENTS_API } from '../data'
+import { API_BASE, DOCS, EVENTS_API, TABLE_DEPOSIT } from '../data'
 import { api, ApiError, loadToken, saveToken } from '../lib/api'
 import { asset } from '../lib/asset'
 import { scrollToId } from '../lib/scroll'
@@ -426,8 +426,9 @@ export default function Booking() {
         <Reveal className="max-w-3xl">
           <h2 className="section-title">Забронировать стол</h2>
           <p className="mt-5 text-lg text-white/65 max-w-2xl">
-            {deposit > 0
-              ? `Депозит ${rub(deposit)} за стол — засчитаем в счёт бара. Выбери вечеринку и стол на плане зала, подтверди номер телефона и оплати — бронь подтвердится сразу.`
+            {/* до загрузки плана (или без вечеринок) — сумма из текстов сайта */}
+            {(plan ? deposit : TABLE_DEPOSIT) > 0
+              ? `Депозит ${rub(plan ? deposit : TABLE_DEPOSIT)} за стол — засчитаем в счёт бара. Выбери вечеринку и стол на плане зала, подтверди номер телефона и оплати — бронь подтвердится сразу.`
               : 'Выбери вечеринку и стол на плане зала, подтверди номер телефона — бронь подтвердится сразу.'}
           </p>
         </Reveal>
