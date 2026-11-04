@@ -2,6 +2,12 @@ import { CASHBACK, CLUBAPP } from '../data'
 import { asset } from '../lib/asset'
 
 const rub = (n: number) => `${new Intl.NumberFormat('ru-RU').format(n)} ₽`
+
+// Официальные значки магазинов (Apple Marketing Resources, Google Play badges) — без изменений
+const BADGES: Record<string, { src: string; label: string }> = {
+  'App Store': { src: 'img/badges/app-store.svg', label: 'Скачать EXIT 13 в App Store' },
+  'Google Play': { src: 'img/badges/google-play.png', label: 'Скачать EXIT 13 в Google Play' },
+}
 const [FIRST, SECOND] = CASHBACK.levels
 
 // ── Декоративный QR (не сканируется): 21×21 модуль, три «глаза» как у настоящего ──
@@ -147,16 +153,17 @@ export default function ClubApp() {
           </div>
           <div>
             <h3 className="font-display text-base font-medium text-text">Скачать</h3>
-            <div className="mt-3 flex flex-wrap gap-3">
-              {apps.map((s, i) => (
+            <div className="mt-4 flex flex-wrap items-center gap-4">
+              {apps.map((s) => (
                 <a
                   key={s.name}
                   href={s.href}
                   target="_blank"
                   rel="noreferrer"
-                  className={`btn btn-sm ${i === 0 ? 'btn-acid' : 'btn-outline'}`}
+                  aria-label={BADGES[s.name]?.label ?? s.name}
+                  className="rounded-lg transition-opacity hover:opacity-85"
                 >
-                  {s.name}
+                  <img src={asset(BADGES[s.name]?.src ?? '')} alt="" className="block h-12 w-auto" />
                 </a>
               ))}
             </div>

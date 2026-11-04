@@ -1,15 +1,41 @@
-import type React from 'react'
+import { useEffect, useRef, type CSSProperties } from 'react'
 import Marquee from './Marquee'
 import { GENRES } from '../data'
 import { scrollToId } from '../lib/scroll'
 import { asset } from '../lib/asset'
 
 // Первый экран — неоновая вывеска, как на exit13.space: золотой ореол логотипа, дышащее
-// пятно света, сетка точек и виньетка (стили — .neon-logo/.hero-* в index.css). Вспышка
-// включения — единственное «само по себе» движение страницы.
+// пятно света, сетка точек и виньетка (стили — .neon-logo/.hero-* в index.css) поверх
+// приглушённого видео танцпола клуба (ролик из Telegram-канала клуба, без звука).
+// prefers-reduced-motion — видео не запускаем, остаётся кадр-постер.
 export default function Hero() {
+  const video = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    const v = video.current
+    if (!v || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    v.muted = true // iOS запускает автоплей только без звука
+    v.play().catch(() => {
+      // автоплей запрещён (режим энергосбережения) — остаётся постер
+    })
+  }, [])
+
   return (
     <section id="top" className="relative flex min-h-[100svh] flex-col overflow-hidden bg-void">
+      <video
+        ref={video}
+        aria-hidden
+        tabIndex={-1}
+        muted
+        loop
+        playsInline
+        preload="auto"
+        poster={asset('video/dance.jpg')}
+        className="absolute inset-0 h-full w-full object-cover opacity-80 [filter:blur(1px)_saturate(0.9)]"
+      >
+        <source src={asset('video/dance.mp4')} type="video/mp4" />
+      </video>
+      <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-void/70 via-void/35 to-void" />
       <div aria-hidden className="hero-light" />
       <div aria-hidden className="hero-dots" />
       <div aria-hidden className="hero-vignette" />
@@ -19,7 +45,7 @@ export default function Hero() {
           {/* глитч при наведении — как в main: голубая и розовая копии логотипа со сдвигом */}
           <span
             className="glitch-logo mx-auto w-[min(88vw,44rem)]"
-            style={{ '--logo': `url(${asset('img/logo.png')})` } as React.CSSProperties}
+            style={{ '--logo': `url(${asset('img/logo.png')})` } as CSSProperties}
           >
             <img
               src={asset('img/logo.png')}
