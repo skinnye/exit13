@@ -5,7 +5,6 @@
 
 export const VENUE = {
   name: 'EXIT 13',
-  tagline: 'Пивной бар до полуночи. Техно-рейв до утра.',
   city: 'Екатеринбург',
   address: 'ул. 8 Марта, 13',
   metro: 'м. Площадь 1905 года — 80 м',
@@ -62,6 +61,7 @@ export const SUPPORT_BOT = { label: '@EXIT13_AUTHBOT', href: 'https://t.me/EXIT1
 
 export const NAV = [
   { label: 'Афиша', href: '#afisha' },
+  { label: 'Бронь', href: '#booking' },
   { label: 'Меню', href: '#menu' },
   { label: 'Кальян', href: '#hookah' },
   { label: 'Приложение', href: '#club' },
@@ -295,14 +295,15 @@ export const CLUBAPP = {
     { t: 'Уведомления', d: 'Сервисные пуши — например, о брони. Рекламные рассылки — только с твоего согласия.' },
   ],
   payment: {
-    now: 'Оплата входа — на месте: карта, наличные, QR / СБП.',
-    soon: 'Онлайн-оплата в приложении — скоро.',
+    online: 'Онлайн — в приложении: карта, SberPay, СБП (ЮKassa).',
+    onsite: 'На месте — карта, наличные, QR / СБП.',
   },
+  // приложение в сторах с 2026-10-28 (Google Play) и 2026-11-04 (App Store)
   stores: [
-    { name: 'App Store', status: 'скоро' },
-    { name: 'Google Play', status: 'скоро' },
+    { name: 'App Store', href: 'https://apps.apple.com/app/id6789931582' },
+    { name: 'Google Play', href: 'https://play.google.com/store/apps/details?id=ru.exit13.app' },
     { name: 'RuStore', status: 'скоро' },
-  ],
+  ] as Array<{ name: string; href?: string; status?: string }>,
 }
 
 export const PHOTOS = [
@@ -321,7 +322,10 @@ export const GENRES = [
 // Живая афиша — GET /events на сервере клуба (тот же источник, что у приложения).
 // Для запроса с сайта на GitHub Pages сервер должен разрешить CORS для его origin
 // (ALLOWED_ORIGINS на бэке). Пока не разрешил — показываем архив ниже.
-export const EVENTS_API = `${CLUB_SITE}/events`
+// API клуба: '' — тот же origin (app.exit13.space и локальный dev-прокси), на GitHub Pages —
+// абсолютный адрес app.exit13.space (см. vite.config.ts).
+export const API_BASE = __API_BASE__
+export const EVENTS_API = `${API_BASE}/events`
 
 export type ArchiveEvent = {
   date: string // YYYY-MM-DD

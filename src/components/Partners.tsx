@@ -206,8 +206,7 @@ export default function Partners() {
               · бронь и вопросы — {VENUE.phone}
             </Card>
             <Card title="Приложение">
-              iOS (TestFlight) и Android (закрытый тест) — доступ для проверки по запросу. Публично — скоро в App
-              Store, Google Play и RuStore.
+              EXIT 13 в App Store и Google Play (в RuStore — скоро). Бронь стола — также на сайте клуба.
             </Card>
           </div>
         </section>

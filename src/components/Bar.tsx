@@ -10,7 +10,7 @@ export default function Bar() {
           <h2 className="font-display text-4xl sm:text-6xl text-white leading-[0.95]">
             Вечером — <span className="text-white/40">бар.</span>
             <br />
-            Ночью — <span className="text-acid">рейв.</span>
+            Ночью — <span className="text-acid">танцпол.</span>
           </h2>
           <p className="mt-6 text-lg text-white/70 max-w-2xl">
             Заходишь на пиво и закуски в уютный пивной бар у Площади 1905 года. Сдаёшь обувь,

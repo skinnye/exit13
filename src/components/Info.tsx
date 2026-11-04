@@ -37,7 +37,7 @@ export default function Info() {
             <div className="rounded-card border border-line p-5">
               <div className="font-mono text-xs text-dim uppercase tracking-[0.12em] mb-2">Оплата на месте</div>
               <div className="text-white">{VENUE.payments}</div>
-              <div className="mt-1 text-sm text-fog">{CLUBAPP.payment.soon}</div>
+              <div className="mt-1 text-sm text-fog">{CLUBAPP.payment.online}</div>
             </div>
             <div className="rounded-card border border-line p-5 sm:col-span-2">
               <div className="font-mono text-xs text-dim uppercase tracking-[0.12em] mb-2">Столы</div>

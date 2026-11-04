@@ -9,7 +9,7 @@ import {
   type MotionStyle,
   type Variants,
 } from 'framer-motion'
-import { CASHBACK, CLUBAPP, VENUE } from '../data'
+import { CASHBACK, CLUBAPP } from '../data'
 import { asset } from '../lib/asset'
 
 const EASE = [0.16, 1, 0.3, 1] as const
@@ -237,18 +237,24 @@ export default function ClubApp() {
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
           <div className="rounded-card border border-line bg-panel p-6">
             <div className="font-mono text-xs uppercase tracking-[0.12em] text-dim">Оплата входа</div>
-            <p className="mt-2 text-white">{CLUBAPP.payment.now}</p>
-            <p className="mt-1 text-fog">{CLUBAPP.payment.soon}</p>
+            <p className="mt-2 text-white">{CLUBAPP.payment.online}</p>
+            <p className="mt-1 text-fog">{CLUBAPP.payment.onsite}</p>
           </div>
           <div className="rounded-card border border-line bg-panel p-6">
             <div className="font-mono text-xs uppercase tracking-[0.12em] text-dim">Где скачать</div>
             <div className="mt-3 flex flex-wrap gap-2.5">
-              {CLUBAPP.stores.map((s) => (
-                <span key={s.name} className="chip chip-dark">
-                  <span className="text-text">{s.name}</span>
-                  <span className="text-acid">{s.status}</span>
-                </span>
-              ))}
+              {CLUBAPP.stores.map((s) =>
+                s.href ? (
+                  <a key={s.name} href={s.href} target="_blank" rel="noreferrer" className="chip chip-acid">
+                    {s.name}
+                  </a>
+                ) : (
+                  <span key={s.name} className="chip chip-dark">
+                    <span className="text-text">{s.name}</span>
+                    <span className="text-acid">{s.status}</span>
+                  </span>
+                ),
+              )}
             </div>
           </div>
         </div>
@@ -263,19 +269,26 @@ export default function ClubApp() {
         >
           <div>
             <h3 className="font-display text-2xl uppercase text-white sm:text-3xl">
-              Приложение — в <span className="text-acid">закрытом тесте</span>
+              Скачай <span className="text-acid">EXIT 13</span>
             </h3>
             <p className="mt-2 max-w-md text-white/60">
-              Скоро в App Store, Google Play и RuStore. О запуске расскажем в Telegram-канале клуба.
+              Приложение — в App Store и Google Play, в RuStore — скоро. Вопросы — в Telegram-канале клуба.
             </p>
           </div>
           <div className="flex shrink-0 flex-wrap gap-3">
-            <a href={VENUE.tg} target="_blank" rel="noreferrer" className="btn btn-acid">
-              Telegram
-            </a>
-            <a href={`tel:${VENUE.phoneRaw}`} className="btn btn-outline">
-              Позвонить
-            </a>
+            {CLUBAPP.stores
+              .filter((s) => s.href)
+              .map((s, i) => (
+                <a
+                  key={s.name}
+                  href={s.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`btn ${i === 0 ? 'btn-acid' : 'btn-outline'}`}
+                >
+                  {s.name}
+                </a>
+              ))}
           </div>
         </motion.div>
       </div>

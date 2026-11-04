@@ -16,8 +16,7 @@ export default function Residents() {
             Те, кто играет <span className="text-acid">в тринадцатом</span>
           </h2>
           <p className="mt-5 text-lg text-white/65 max-w-2xl">
-            Локальные резиденты Екатеринбурга и приглашённые артисты московского андеграунда —
-            от гипнотик-техно до broken и electro.
+            Локальные резиденты Екатеринбурга и приглашённые артисты московского андеграунда.
           </p>
         </Reveal>
       </div>

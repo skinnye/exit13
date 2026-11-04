@@ -8,6 +8,7 @@ import Hookah from './components/Hookah'
 import ClubApp from './components/ClubApp'
 import Gallery from './components/Gallery'
 import Events from './components/Events'
+import Booking from './components/Booking'
 import ScrollProgress from './components/ScrollProgress'
 import Residents from './components/Residents'
 import Info from './components/Info'
@@ -43,6 +44,7 @@ export default function App() {
         <ClubApp />
         <Gallery />
         <Events />
+        <Booking />
         <Residents />
         <Info />
       </main>

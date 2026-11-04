@@ -65,14 +65,7 @@ export default function Hero() {
           <span className="sr-only">EXIT 13 — ночной клуб в Екатеринбурге</span>
         </motion.h1>
 
-        <motion.p
-          className="mt-7 max-w-xl text-lg font-semibold leading-snug text-text sm:mt-9 sm:text-2xl"
-          {...rise(0.32)}
-        >
-          {VENUE.tagline}
-        </motion.p>
-
-        <motion.ul className="mt-6 flex flex-wrap gap-2" {...rise(0.44, 16)}>
+        <motion.ul className="mt-7 sm:mt-9 flex flex-wrap gap-2" {...rise(0.44, 16)}>
           {chips.map((c) => (
             <li key={c.text} className={`chip ${c.tone}`}>
               {c.text}

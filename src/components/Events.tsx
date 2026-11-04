@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CLUB_SITE, CLUBAPP, EVENTS_API, EVENTS_ARCHIVE, VENUE } from '../data'
+import { API_BASE, CLUBAPP, EVENTS_API, EVENTS_ARCHIVE, VENUE } from '../data'
 import Reveal from './Reveal'
 
 // Афиша: живые данные с сервера клуба (GET /events — тот же источник, что у приложения).
@@ -56,7 +56,7 @@ function price(v: unknown): number | undefined {
 
 // Только загрузки сервера клуба (/uploads/…), как на app.exit13.space.
 function poster(v: unknown): string | undefined {
-  return typeof v === 'string' && v.startsWith('/uploads/') ? CLUB_SITE + v : undefined
+  return typeof v === 'string' && v.startsWith('/uploads/') ? API_BASE + v : undefined
 }
 
 function parseEvents(data: unknown): Show[] {
@@ -276,9 +276,9 @@ export default function Events() {
         <div className="mt-6 space-y-1.5 font-mono text-xs text-dim">
           {live && <p>Цена — за вход одного гостя: до 01:00 и после 01:00.</p>}
           <p>
-            {CLUBAPP.payment.now} {CLUBAPP.payment.soon}
+            {CLUBAPP.payment.online} {CLUBAPP.payment.onsite}
           </p>
-          <p>Бронь стола в приложении — бесплатно. По телефону — {VENUE.phone}.</p>
+          <p>Бронь стола — бесплатно, на сайте и в приложении. По телефону — {VENUE.phone}.</p>
         </div>
       </div>
     </section>
