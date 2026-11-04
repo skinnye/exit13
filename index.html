@@ -24,6 +24,23 @@
     <link rel="preload" as="image" href="/img/logo.png" fetchpriority="high" />
   </head>
   <body>
+    <!-- Без JavaScript (робот проверки платёжного провайдера, поисковики): главное о клубе,
+         реквизиты продавца и документы — прямо в HTML. С JavaScript блок не показывается. -->
+    <noscript>
+      <main style="max-width: 46rem; margin: 3rem auto; padding: 0 1.25rem; font-family: system-ui, sans-serif; line-height: 1.5">
+        <h1>EXIT 13 — клуб-бар в Екатеринбурге</h1>
+        <p>ул. 8 Марта, 13 (м. Площадь 1905 года). Вход строго 21+. Входной билет на вечеринку — от 500 ₽,
+          точная цена — в афише; бронь стола — бесплатно. Для афиши и брони включите JavaScript.</p>
+        <p>Продавец: ООО «БЕЗ НАЗВАНИЯ» · ИНН 6671295025 · КПП 667101001 · ОГРН 1246600012350 ·
+          620014, г. Екатеринбург, ул. 8 Марта, стр. 13 · +7 (912) 277-00-10 · no_name_ekb@bk.ru</p>
+        <p>
+          <a href="https://app.exit13.space/legal/offer">Публичная оферта</a> ·
+          <a href="https://app.exit13.space/legal/contacts">Контакты и реквизиты</a> ·
+          <a href="https://app.exit13.space/legal/privacy">Политика конфиденциальности</a> ·
+          <a href="https://app.exit13.space/legal/delete-account">Удаление аккаунта</a>
+        </p>
+      </main>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
