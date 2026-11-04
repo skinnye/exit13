@@ -19,7 +19,7 @@ const API_RECENT_LIMIT: number = 0
 
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
-const WEEKDAYS = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ']
+const WEEKDAYS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб']
 
 type Show = {
   key: string
@@ -122,10 +122,10 @@ function PriceLine({ early, late }: { early?: number; late?: number }) {
           до 01:00 — <span className="text-acid">{rub(early)}</span>
         </span>
       )}
-      {early && late && <span className="text-dim"> · </span>}
+      {early && late && <br />}
       {late && (
         <span className="whitespace-nowrap">
-          {early ? 'после' : 'после 01:00'} — <span className="text-acid">{rub(late)}</span>
+          после 01:00 — <span className="text-acid">{rub(late)}</span>
         </span>
       )}
     </>
@@ -136,7 +136,7 @@ function EventRow({ e, past, index }: { e: Show; past: boolean; index: number })
   const { dm, weekday, year } = dateParts(e.date)
   return (
     <Reveal as="article" delay={(index % 5) * 60} className="group border-b border-line">
-      <div className="-mx-2 grid items-center gap-5 px-2 py-6 transition-colors group-hover:bg-panel/60 md:-mx-4 md:grid-cols-[auto_1fr_auto] md:gap-8 md:px-4 md:py-7">
+      <div className="-mx-2 grid items-center gap-5 px-2 py-6 md:-mx-4 md:grid-cols-[auto_1fr_auto] md:gap-8 md:px-4 md:py-7">
         <div className="flex items-center gap-4 md:w-56">
           {!past &&
             (e.poster ? (
@@ -158,32 +158,32 @@ function EventRow({ e, past, index }: { e: Show; past: boolean; index: number })
           <div>
             <time
               dateTime={e.time ? `${e.date}T${e.time}+05:00` : e.date}
-              className="block font-display text-3xl text-acid md:text-4xl"
+              className="block font-display text-3xl font-semibold tabular-nums text-acid md:text-4xl"
             >
               {dm}
             </time>
-            <span className="font-mono text-xs uppercase tracking-[0.1em] text-dim">
-              {[weekday, e.time, past ? year : ''].filter(Boolean).join(' · ')}
+            <span className="text-sm text-dim">
+              {[weekday, e.time, past ? year : ''].filter(Boolean).join(', ')}
             </span>
           </div>
         </div>
 
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2.5">
-            <h3 className="font-display text-xl uppercase text-white md:text-2xl">{e.title}</h3>
+            <h3 className="font-display text-xl font-medium text-white md:text-2xl">{e.title}</h3>
             {e.badge && <span className="chip chip-dim">{e.badge}</span>}
             {past && <span className="chip chip-dark">прошло</span>}
           </div>
           {e.style && (
-            <p className="mt-1.5 font-mono text-xs uppercase tracking-[0.1em] text-fog">{e.style} · 21+</p>
+            <p className="mt-1.5 text-sm text-fog">{e.style}, 21+</p>
           )}
           {e.lineup.length > 0 && (
-            <p className="mt-2 font-mono text-xs text-white/55 md:text-sm">{e.lineup.join('  ·  ')}</p>
+            <p className="mt-2 text-sm text-white/55">{e.lineup.join(', ')}</p>
           )}
         </div>
 
         {!past && (
-          <div className="font-mono text-sm text-text md:text-right">
+          <div className="tabular-nums text-sm text-text md:text-right">
             <PriceLine early={e.priceEarly} late={e.priceLate} />
           </div>
         )}
@@ -241,8 +241,7 @@ export default function Events() {
       <div className="container-x">
         <Reveal className="mb-10 flex items-end justify-between gap-6">
           <div>
-            <div className="mono-label mb-4">Афиша</div>
-            <h2 className="font-display text-4xl text-white sm:text-6xl">Что играет</h2>
+            <h2 className="section-title">Афиша</h2>
           </div>
           <a href={VENUE.tg} target="_blank" rel="noreferrer" className="btn btn-outline hidden sm:inline-flex">
             Афиша в Telegram
@@ -266,14 +265,14 @@ export default function Events() {
           </div>
         )}
 
-        <div className="mb-2 font-mono text-xs uppercase tracking-[0.12em] text-dim">{listTitle}</div>
+        <p className="mb-3 text-sm text-dim">{listTitle}</p>
         <div className="border-t border-line">
           {list.map((e, i) => (
             <EventRow key={e.key} e={e} past={!live} index={i} />
           ))}
         </div>
 
-        <div className="mt-6 space-y-1.5 font-mono text-xs text-dim">
+        <div className="mt-6 space-y-1.5 text-sm text-dim">
           {live && <p>Цена — за вход одного гостя: до 01:00 и после 01:00.</p>}
           <p>
             {CLUBAPP.payment.online} {CLUBAPP.payment.onsite}

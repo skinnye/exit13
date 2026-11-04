@@ -1,34 +1,30 @@
-import { HOOKAH, VENUE } from '../data'
-import Reveal from './Reveal'
+import { HOOKAH } from '../data'
+import { scrollToId } from '../lib/scroll'
 
 export default function Hookah() {
   return (
-    <section id="hookah" className="section relative bg-ink hairline overflow-hidden">
+    <section id="hookah" className="section relative overflow-hidden bg-ink hairline">
       <div className="container-x relative">
-        <Reveal className="max-w-2xl">
-          <div className="mono-label mb-4">Кальянная</div>
-          <h2 className="font-display text-4xl sm:text-6xl text-white">
-            Дым под <span className="text-acid">бит</span>
-          </h2>
+        <div className="max-w-2xl">
+          <h2 className="section-title">Кальян</h2>
           <p className="mt-5 text-lg text-white/70">{HOOKAH.intro}</p>
-        </Reveal>
-
-        <div className="mt-12 grid gap-px overflow-hidden rounded-card border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
-          {HOOKAH.options.map((o, i) => (
-            <Reveal key={o.name} delay={(i % 4) * 80} className="bg-void p-6 hover:bg-panel transition-colors group flex flex-col">
-              <div className="font-mono text-acid text-sm mb-4">0{i + 1}</div>
-              <h3 className="font-display text-xl uppercase text-white group-hover:text-acid transition-colors">{o.name}</h3>
-              <p className="mt-2 text-sm text-white/55 leading-relaxed">{o.desc}</p>
-            </Reveal>
-          ))}
         </div>
 
-        <Reveal className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-card border border-line bg-panel p-6">
+        <dl className="mt-12 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+          {HOOKAH.options.map((o) => (
+            <div key={o.name}>
+              <dt className="font-display text-lg font-medium text-text">{o.name}</dt>
+              <dd className="mt-2 leading-relaxed text-white/60">{o.desc}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <div className="mt-12 flex flex-col justify-between gap-4 border-t border-line pt-8 sm:flex-row sm:items-center">
           <p className="text-white/75">{HOOKAH.priceNote}</p>
-          <a href={`tel:${VENUE.phoneRaw}`} className="btn btn-acid shrink-0">
+          <button type="button" className="btn btn-acid shrink-0" onClick={() => scrollToId('#booking')}>
             Забронировать стол
-          </a>
-        </Reveal>
+          </button>
+        </div>
       </div>
     </section>
   )

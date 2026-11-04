@@ -18,7 +18,7 @@ const FLOW_ONLINE = [
 const FLOW_NOW = [
   'Гость приходит в ночь вечеринки — с отметкой «Я иду» в приложении или без неё',
   'Охрана проверяет возраст 21+ по документу',
-  'Оплата входа на кассе клуба: карта, наличные, QR / СБП — по цене на момент прихода',
+  'Оплата входа на кассе клуба: карта, наличные, QR или СБП — по цене на момент прихода',
   'Гость с приложением показывает QR клубной карты — охрана отмечает вход',
 ]
 
@@ -28,17 +28,17 @@ function FlowRow({ label, steps, muted = false }: { label: string; steps: string
   const accent = muted ? 'text-fog' : 'text-acid'
   return (
     <div className="rounded-card border border-line bg-panel p-5 sm:p-7">
-      <h3 className={`mb-5 font-mono text-xs font-medium uppercase tracking-[0.12em] ${accent}`}>{label}</h3>
+      <h3 className={`mb-5 font-display text-base font-medium ${accent}`}>{label}</h3>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch lg:gap-2">
         {steps.map((s, i) => (
           <Fragment key={i}>
             <div className="flex-1 rounded-card border border-line bg-void p-4">
-              <span className={`font-mono text-xs ${accent}`}>{String(i + 1).padStart(2, '0')}</span>
+              <span className={`text-sm font-semibold tabular-nums ${accent}`}>Шаг {i + 1}</span>
               <p className="mt-1.5 text-sm leading-snug text-white/80">{s}</p>
             </div>
             {i < steps.length - 1 && (
               <div
-                className={`flex shrink-0 items-center justify-center font-mono text-lg ${muted ? 'text-dim' : 'text-acid'}`}
+                className={`flex shrink-0 items-center justify-center text-lg ${muted ? 'text-dim' : 'text-acid'}`}
                 aria-hidden
               >
                 <span className="lg:hidden">↓</span>
@@ -55,7 +55,7 @@ function FlowRow({ label, steps, muted = false }: { label: string; steps: string
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="rounded-card border border-line bg-panel p-6">
-      <h3 className="font-display text-lg uppercase text-acid">{title}</h3>
+      <h3 className="font-display text-lg text-acid">{title}</h3>
       <div className="mt-2 text-sm leading-relaxed text-white/70">{children}</div>
     </div>
   )
@@ -63,16 +63,16 @@ function Card({ title, children }: { title: string; children: ReactNode }) {
 
 export default function Partners() {
   return (
-    <div className="grain min-h-screen">
+    <div className="min-h-screen">
       {/* Шапка */}
       <header className="border-b border-line">
         <div className="container-x flex items-center justify-between py-5">
           <LogoLink />
           <a
             href={asset('/')}
-            className="font-mono text-xs uppercase tracking-[0.1em] text-fog transition-colors hover:text-acid"
+            className="text-sm text-fog transition-colors hover:text-acid"
           >
-            ← на сайт
+            На сайт
           </a>
         </div>
       </header>
@@ -80,29 +80,26 @@ export default function Partners() {
       <main className="container-x py-14 sm:py-20">
         {/* Заголовок */}
         <div className="max-w-3xl">
-          <div className="mono-label mb-4">Для платёжного провайдера</div>
-          <h1 className="font-display text-4xl uppercase leading-[0.95] text-white sm:text-6xl">
-            EXIT 13 — <span className="text-acid">платёжное</span> подключение
+          <h1 className="font-display text-4xl font-semibold leading-[1.02] text-white sm:text-6xl">
+            EXIT 13: оплата и возвраты
           </h1>
           <p className="mt-5 text-lg text-white/70">
-            Ночной клуб в Екатеринбурге ({ORG.short}). Онлайн продаём одну услугу — входной билет на
-            вечеринку клуба. Ниже — что продаётся, как устроена оплата, возвраты и реквизиты.
+            Страница для платёжного провайдера. EXIT 13 — клуб-бар в Екатеринбурге ({ORG.short}). Онлайн
+            продаём одну услугу — входной билет на вечеринку клуба. Ниже — что продаётся, как устроена оплата,
+            возвраты и реквизиты.
           </p>
-          <div className="mt-6 inline-flex items-start gap-2.5 rounded-card border border-line bg-panel px-4 py-3 font-mono text-xs leading-relaxed text-white/75">
-            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-acid" />
-            <span>
-              Сейчас вход оплачивается на месте — на кассе клуба. Онлайн-оплата в приложении готова в коде и
-              ждёт подключения эквайринга.
-            </span>
-          </div>
+          <p className="mt-6 max-w-2xl rounded-card border border-line bg-panel px-4 py-3 text-sm leading-relaxed text-white/75">
+            Онлайн-оплата входа работает в приложении EXIT 13 через ЮKassa. На месте вход оплачивают на кассе
+            клуба: картой, наличными, по QR и через СБП.
+          </p>
         </div>
 
         {/* О бизнесе */}
         <section className="mt-14">
-          <h2 className="font-display text-2xl uppercase text-white sm:text-3xl">О бизнесе</h2>
+          <h2 className="font-display text-2xl text-white sm:text-3xl">О бизнесе</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Card title="Что за бизнес">
-              EXIT 13 — ночной клуб: {VENUE.city}, {VENUE.address}. Вечеринки с электронной музыкой, бар и
+              EXIT 13 — клуб-бар: {VENUE.city}, {VENUE.address}. Вечеринки с электронной музыкой, бар и
               кухня, бронь столов. Вход строго 21+ по документу.
             </Card>
             <Card title="Онлайн-продукт">
@@ -121,14 +118,14 @@ export default function Partners() {
 
         {/* Что оплачивается */}
         <section className="mt-14">
-          <h2 className="font-display text-2xl uppercase text-white sm:text-3xl">Что оплачивается онлайн</h2>
+          <h2 className="font-display text-2xl text-white sm:text-3xl">Что оплачивается онлайн</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Card title="Входной билет">
               Право прохода одного гостя на конкретную вечеринку. Онлайн оплачивается цена «до 01:00» из афиши —
               от 500&nbsp;₽; вход действует всю ночь. После 01:00 вход дороже и оплачивается на месте.
             </Card>
             <Card title="Бронь стола — бесплатно">
-              Стол бронируется в приложении без оплаты и без предоплаты; бронь действует сразу. Это не платная
+              Стол бронируется на сайте клуба или в приложении без оплаты и без предоплаты; бронь действует сразу. Это не платная
               услуга.
             </Card>
             <Card title="Бар и кухня — офлайн">
@@ -147,14 +144,14 @@ export default function Partners() {
 
         {/* Схема платёжного флоу */}
         <section className="mt-14">
-          <h2 className="font-display text-2xl uppercase text-white sm:text-3xl">Как устроена оплата</h2>
+          <h2 className="font-display text-2xl text-white sm:text-3xl">Как устроена оплата</h2>
           <p className="mt-3 max-w-2xl text-white/60">
             Данные карт не проходят через сервер клуба — оплата идёт на защищённой странице провайдера. Статус
             платежа сервер всегда перепроверяет запросом к провайдеру, а не по одному уведомлению.
           </p>
           <div className="mt-6 space-y-5">
-            <FlowRow label="1 · Онлайн-билет в приложении (после подключения)" steps={FLOW_ONLINE} />
-            <FlowRow label="2 · Сейчас: оплата на месте" steps={FLOW_NOW} muted />
+            <FlowRow label="Онлайн-билет в приложении" steps={FLOW_ONLINE} />
+            <FlowRow label="Оплата на месте" steps={FLOW_NOW} muted />
           </div>
         </section>
 
@@ -181,11 +178,11 @@ export default function Partners() {
 
         {/* Документы */}
         <section className="mt-14">
-          <h2 className="font-display text-2xl uppercase text-white sm:text-3xl">Документы</h2>
+          <h2 className="font-display text-2xl text-white sm:text-3xl">Документы</h2>
           <div className="mt-6 flex flex-wrap gap-3">
             {DOC_LINKS.map((d) => (
               <a key={d.href} href={d.href} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm">
-                {d.label} ↗
+                {d.label}
               </a>
             ))}
           </div>
@@ -193,7 +190,7 @@ export default function Partners() {
 
         {/* Реквизиты и контакты */}
         <section className="mt-14">
-          <h2 className="font-display text-2xl uppercase text-white sm:text-3xl">Реквизиты</h2>
+          <h2 className="font-display text-2xl text-white sm:text-3xl">Реквизиты</h2>
           <div className="mt-6">
             <OrgRequisites bank />
           </div>
@@ -203,7 +200,7 @@ export default function Partners() {
               <a href={SUPPORT_BOT.href} target="_blank" rel="noreferrer" className={link}>
                 {SUPPORT_BOT.label}
               </a>{' '}
-              · бронь и вопросы — {VENUE.phone}
+              , бронь и вопросы — {VENUE.phone}
             </Card>
             <Card title="Приложение">
               EXIT 13 в App Store и Google Play (в RuStore — скоро). Бронь стола — также на сайте клуба.

@@ -21,6 +21,7 @@ type Step = 'phone' | 'code' | 'profile'
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
 const WEEKDAYS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб']
+const MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря']
 const MIN_AGE = 21
 const MAX_EVENTS = 8
 const ACTIVE = ['pending', 'confirmed']
@@ -35,7 +36,7 @@ function dayLabel(iso: string) {
   const m = DATE_RE.exec(iso)
   if (!m) return iso
   const wd = WEEKDAYS[new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]))).getUTCDay()]
-  return `${m[3]}.${m[2]} · ${wd}`
+  return `${wd}, ${Number(m[3])} ${MONTHS[Number(m[2]) - 1]}` // «сб, 7 ноября»
 }
 
 const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '')
@@ -350,10 +351,7 @@ export default function Booking() {
     <section id="booking" className="section relative hairline">
       <div className="container-x">
         <Reveal className="max-w-3xl">
-          <div className="mono-label mb-4">Бронь столов</div>
-          <h2 className="font-display text-4xl sm:text-6xl text-white">
-            Забронируй <span className="text-acid">стол</span>
-          </h2>
+          <h2 className="section-title">Забронировать стол</h2>
           <p className="mt-5 text-lg text-white/65 max-w-2xl">
             Бесплатно и без предоплаты. Выбери вечеринку и стол на плане зала, подтверди номер телефона —
             бронь действует сразу.
@@ -389,7 +387,8 @@ export default function Booking() {
                   onClick={() => pickEvent(e.id)}
                   className={`chip cursor-pointer ${e.id === eventId ? 'chip-acid' : 'chip-dark hover:border-acid'}`}
                 >
-                  {dayLabel(e.date)} · {e.title}
+                  <span>{dayLabel(e.date)}</span>
+                  <span className="opacity-75">{e.title}</span>
                 </button>
               ))}
             </div>
@@ -415,7 +414,7 @@ export default function Booking() {
                           setJustBooked(false)
                         }}
                         style={{ left: `${clampPct(t.x)}%`, top: `${clampPct(t.y)}%` }}
-                        className={`absolute flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 font-mono text-xs font-medium transition-colors sm:h-10 sm:w-10 sm:text-sm ${MARKER[look]}`}
+                        className={`absolute flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 tabular-nums text-xs font-medium transition-colors sm:h-10 sm:w-10 sm:text-sm ${MARKER[look]}`}
                       >
                         {t.label}
                       </button>
@@ -427,7 +426,7 @@ export default function Booking() {
                   <span className="chip chip-dark">Занят</span>
                   <span className="chip chip-dim">Твой</span>
                   {plan ? (
-                    <span className="ml-auto font-mono text-xs uppercase tracking-[0.1em] text-dim">
+                    <span className="ml-auto text-sm tabular-nums text-dim">
                       свободно {free} из {plan.tables.length}
                     </span>
                   ) : null}
@@ -439,12 +438,12 @@ export default function Booking() {
                   <p className="text-fog">Не удалось загрузить план зала. Обнови страницу.</p>
                 ) : mine ? (
                   <div className="flex flex-col gap-4">
-                    <div className="mono-label">{justBooked ? 'Готово — стол твой' : 'Твоя бронь'}</div>
-                    <div className="font-display text-4xl uppercase text-white">Стол {mine.tableLabel}</div>
+                    <p className="text-sm font-semibold text-acid">{justBooked ? 'Стол забронирован' : 'Твоя бронь'}</p>
+                    <div className="font-display text-4xl font-semibold text-white">Стол {mine.tableLabel}</div>
                     {event ? (
                       <p className="text-fog">
-                        {event.title} · {dayLabel(event.date)}
-                        {event.time ? ` · ${event.time}` : ''}
+                        {event.title}, {dayLabel(event.date)}
+                        {event.time ? `, ${event.time}` : ''}
                       </p>
                     ) : null}
                     <p className="text-white/70">
@@ -457,10 +456,10 @@ export default function Booking() {
                   </div>
                 ) : step === 'phone' ? (
                   <form className="flex flex-col gap-4" onSubmit={onRequestCode}>
-                    <div className="mono-label">Стол {table?.label} · вход по телефону</div>
-                    <p className="text-white/70">Пришлём код в SMS. По этому номеру бронь увидит охрана на входе.</p>
+                    <h3 className="font-display text-xl font-medium text-text">Вход по телефону</h3>
+                    <p className="text-white/70">Стол {table?.label}. Пришлём код в SMS — по этому номеру бронь увидит охрана на входе.</p>
                     <label className="flex items-center gap-2 rounded-card border border-line bg-panel2 px-4 focus-within:border-acid">
-                      <span className="font-mono text-text">+7</span>
+                      <span className="tabular-nums text-text">+7</span>
                       <input
                         className="w-full bg-transparent py-3.5 text-text placeholder:text-dim outline-none"
                         value={formatPhone(digits)}
@@ -510,10 +509,10 @@ export default function Booking() {
                   </form>
                 ) : step === 'code' ? (
                   <div className="flex flex-col gap-4">
-                    <div className="mono-label">Код из SMS</div>
+                    <h3 className="font-display text-xl font-medium text-text">Код из SMS</h3>
                     <p className="text-white/70">Отправили на +7 {formatPhone(digits)}.</p>
                     <input
-                      className={`${input} font-mono text-2xl tracking-[0.5em]`}
+                      className={`${input} text-2xl tabular-nums tracking-[0.4em]`}
                       value={code}
                       onChange={(e) => {
                         const next = e.target.value.replace(/\D/g, '').slice(0, 4)
@@ -544,9 +543,9 @@ export default function Booking() {
                   </div>
                 ) : step === 'profile' ? (
                   <form className="flex flex-col gap-4" onSubmit={onProfile}>
-                    <div className="mono-label">Почти готово</div>
+                    <h3 className="font-display text-xl font-medium text-text">Пара слов о себе</h3>
                     <p className="text-white/70">
-                      Ты у нас впервые — пара слов о себе. Имя увидит охрана на входе, дата рождения — проверка {MIN_AGE}+.
+                      Ты у нас впервые. Имя увидит охрана на входе, дата рождения нужна для проверки {MIN_AGE}+.
                     </p>
                     <input
                       className={input}
@@ -579,10 +578,9 @@ export default function Booking() {
                   </form>
                 ) : table ? (
                   <div className="flex flex-col gap-4">
-                    <div className="mono-label">Твой выбор</div>
-                    <div className="font-display text-4xl uppercase text-white">Стол {table.label}</div>
+                    <div className="font-display text-4xl font-semibold text-white">Стол {table.label}</div>
                     <p className="text-fog">
-                      до {table.capacity} гостей{event ? ` · ${event.title} · ${dayLabel(event.date)}` : ''}
+                      До {table.capacity} гостей{event ? `. ${event.title}, ${dayLabel(event.date)}` : ''}
                     </p>
                     <textarea
                       className={`${input} min-h-24 resize-y`}
@@ -597,7 +595,7 @@ export default function Booking() {
                   </div>
                 ) : (
                   <div className="flex flex-col gap-3">
-                    <div className="mono-label">Как забронировать</div>
+                    <h3 className="font-display text-xl font-medium text-text">Как забронировать</h3>
                     <p className="text-white/70">
                       Нажми на свободный стол на плане. Есть столы на 2, 4 и 8 гостей — число гостей видно, когда
                       выбираешь стол.

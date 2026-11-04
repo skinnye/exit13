@@ -1,5 +1,4 @@
 import Marquee from './Marquee'
-import Reveal from './Reveal'
 import { RESIDENTS } from '../data'
 
 const half = Math.ceil(RESIDENTS.length / 2)
@@ -10,24 +9,23 @@ export default function Residents() {
   return (
     <section id="residents" className="section relative overflow-hidden">
       <div className="container-x mb-10">
-        <Reveal className="max-w-3xl">
-          <div className="mono-label mb-4">Резиденты и гости</div>
-          <h2 className="font-display text-4xl sm:text-6xl text-white">
-            Те, кто играет <span className="text-acid">в тринадцатом</span>
-          </h2>
-          <p className="mt-5 text-lg text-white/65 max-w-2xl">
+        <div className="max-w-3xl">
+          <h2 className="section-title">Кто играет в тринадцатом</h2>
+          <p className="mt-5 max-w-2xl text-lg text-white/65">
             Локальные резиденты Екатеринбурга и приглашённые артисты московского андеграунда.
           </p>
-        </Reveal>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-2 select-none">
-        <div className="font-display font-black text-[clamp(2rem,7vw,5.5rem)] text-white leading-none py-1 border-y border-line">
-          <Marquee items={rowA} sep={<span className="text-acid px-2">/</span>} />
+      <div className="flex select-none flex-col gap-2">
+        <div className="border-y border-line py-1 font-display text-[clamp(2rem,7vw,5.5rem)] font-black leading-none text-white">
+          <Marquee items={rowA} sep={<span className="px-2 text-acid">/</span>} />
         </div>
-        <div className="font-display font-black text-[clamp(2rem,7vw,5.5rem)] text-transparent leading-none py-1 border-b border-line"
-          style={{ WebkitTextStroke: '1px rgba(255,255,255,0.35)' }}>
-          <Marquee items={rowB} reverse sep={<span className="text-acid px-2">/</span>} />
+        <div
+          className="border-b border-line py-1 font-display text-[clamp(2rem,7vw,5.5rem)] font-black leading-none text-transparent"
+          style={{ WebkitTextStroke: '1px rgba(255,255,255,0.35)' }}
+        >
+          <Marquee items={rowB} reverse sep={<span className="px-2 text-acid">/</span>} />
         </div>
       </div>
     </section>

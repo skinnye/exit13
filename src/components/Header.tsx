@@ -39,8 +39,8 @@ export default function Header() {
     <>
       <header
         className={`fixed inset-x-0 top-0 z-50 border-b transition-[background-color,border-color,padding] duration-300 ${
-          solid ? 'border-line bg-ink/90 py-3 backdrop-blur-md' : 'border-transparent py-5'
-        }`}
+ solid ? 'border-line bg-ink/90 py-3 backdrop-blur-md' : 'border-transparent py-5'
+ }`}
       >
         <div className="container-x flex items-center justify-between gap-6">
           <a
@@ -57,7 +57,7 @@ export default function Header() {
                 key={n.href}
                 href={n.href}
                 onClick={(e) => { e.preventDefault(); go(n.href) }}
-                className="font-mono text-[0.72rem] font-medium uppercase tracking-[0.12em] text-fog transition-colors hover:text-acid"
+                className="text-[0.9375rem] font-medium text-fog transition-colors hover:text-acid"
               >
                 {n.label}
               </a>
@@ -111,19 +111,15 @@ export default function Header() {
               </button>
             </div>
             <nav className="container-x mt-4 flex flex-col" aria-label="Разделы">
-              {NAV.map((n, i) => (
-                <motion.a
+              {NAV.map((n) => (
+                <a
                   key={n.href}
                   href={n.href}
                   onClick={(e) => { e.preventDefault(); go(n.href) }}
-                  initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}
-                  className="flex items-center justify-between border-b border-line py-4 font-display text-4xl font-bold uppercase text-text transition-colors active:text-acid"
+                  className="border-b border-line py-4 font-display text-3xl font-semibold text-text transition-colors active:text-acid"
                 >
                   {n.label}
-                  <span className="font-mono text-xs font-medium text-dim" aria-hidden>
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                </motion.a>
+                </a>
               ))}
             </nav>
             <div className="container-x mt-8 flex flex-col gap-3 pb-10">

@@ -23,10 +23,8 @@ export default function Gallery() {
       <div className="container-x">
         <Reveal className="flex items-end justify-between gap-6 mb-8">
           <div>
-            <div className="mono-label mb-4">Интерьер</div>
-            <h2 className="font-display text-4xl sm:text-6xl text-white">Внутри</h2>
+            <h2 className="section-title">Как у нас внутри</h2>
           </div>
-          <span className="hidden sm:block font-mono text-xs text-white/45">нажмите, чтобы открыть</span>
         </Reveal>
 
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
@@ -41,16 +39,15 @@ export default function Gallery() {
                   src={asset(p.src)}
                   alt={p.alt}
                   loading="lazy"
-                  className="w-full h-full object-cover aspect-[16/10] transition-transform duration-700 group-hover:scale-105"
+                  className="w-full h-full object-cover aspect-[16/10]"
                 />
-                <span className="absolute inset-0 ring-1 ring-inset ring-white/10 group-hover:ring-acid/40 transition-colors" />
-                <span className="absolute inset-0 bg-gradient-to-t from-void/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <span className="absolute inset-0 ring-1 ring-inset ring-white/10" />
               </button>
             </Reveal>
           ))}
         </div>
 
-        <p className="mt-5 font-mono text-xs text-white/40">Фото — из официального аккаунта клуба.</p>
+        <p className="mt-5 text-sm text-white/45">Фото из официального аккаунта клуба.</p>
       </div>
 
       <AnimatePresence>
@@ -72,7 +69,7 @@ export default function Gallery() {
               className="max-w-5xl max-h-[82vh]" onClick={(e) => e.stopPropagation()}
             >
               <img src={asset(PHOTOS[open].src)} alt={PHOTOS[open].alt} className="max-h-[76vh] w-auto mx-auto" />
-              <figcaption className="text-center mt-3 font-mono text-xs text-white/55">{PHOTOS[open].alt}</figcaption>
+              <figcaption className="mt-3 text-center text-sm text-white/55">{PHOTOS[open].alt}</figcaption>
             </motion.figure>
           </motion.div>
         )}

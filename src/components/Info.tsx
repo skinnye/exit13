@@ -1,5 +1,5 @@
 import { CLUBAPP, HOURS, VENUE } from '../data'
-import Reveal from './Reveal'
+import { scrollToId } from '../lib/scroll'
 
 // Карточка клуба в Яндекс Картах (организация «Exit13»): метка на клубе, а не на доме
 // 8 Марта, 13 (там много организаций), и сразу — часы, телефон, отзывы, «Как добраться».
@@ -10,73 +10,81 @@ const mapLink = `https://yandex.ru/maps/org/${YA_ORG}/`
 export default function Info() {
   return (
     <section id="info" className="section bg-ink hairline">
-      <div className="container-x grid lg:grid-cols-2 gap-10">
-        <Reveal>
-          <div className="mono-label mb-4">Инфо</div>
-          <h2 className="font-display text-4xl sm:text-5xl text-white">Часы и правила</h2>
+      <div className="container-x grid gap-12 lg:grid-cols-2">
+        <div>
+          <h2 className="section-title">Часы и правила</h2>
 
-          <div className="mt-8 overflow-hidden rounded-card border border-line">
-            {HOURS.map((h) => (
-              <div
-                key={h.d}
-                className={`flex items-center justify-between px-5 py-4 border-b border-line last:border-0 ${
-                  h.club ? 'bg-acid-dim' : ''
-                }`}
-              >
-                <span className="font-mono text-sm uppercase tracking-[0.1em] text-white/70">{h.d}</span>
-                <span className={`font-display text-lg ${h.club ? 'text-acid' : 'text-white'}`}>{h.h}</span>
-              </div>
-            ))}
-          </div>
+          <table className="mt-8 w-full border-collapse text-left">
+            <caption className="sr-only">Часы работы</caption>
+            <tbody>
+              {HOURS.map((h) => (
+                <tr key={h.d} className="border-b border-line">
+                  <th scope="row" className="py-4 pr-4 font-normal text-white/70">
+                    {h.d}
+                  </th>
+                  <td className={`py-4 text-right tabular-nums ${h.club ? 'font-semibold text-acid' : 'text-text'}`}>
+                    {h.h}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-          <div className="mt-4 grid sm:grid-cols-2 gap-4">
-            <div className="rounded-card border border-line p-5">
-              <div className="font-mono text-xs text-dim uppercase tracking-[0.12em] mb-2">Вход</div>
-              <div className="text-white">{VENUE.door}</div>
+          <dl className="mt-10 grid gap-x-10 gap-y-6 sm:grid-cols-2">
+            <div>
+              <dt className="font-display text-base font-medium text-text">Вход</dt>
+              <dd className="mt-1.5 text-white/65">{VENUE.door}</dd>
             </div>
-            <div className="rounded-card border border-line p-5">
-              <div className="font-mono text-xs text-dim uppercase tracking-[0.12em] mb-2">Оплата на месте</div>
-              <div className="text-white">{VENUE.payments}</div>
-              <div className="mt-1 text-sm text-fog">{CLUBAPP.payment.online}</div>
+            <div>
+              <dt className="font-display text-base font-medium text-text">Оплата</dt>
+              <dd className="mt-1.5 text-white/65">
+                {CLUBAPP.payment.onsite} {CLUBAPP.payment.online}
+              </dd>
             </div>
-            <div className="rounded-card border border-line p-5 sm:col-span-2">
-              <div className="font-mono text-xs text-dim uppercase tracking-[0.12em] mb-2">Столы</div>
-              <div className="text-white">
-                В приложении EXIT 13 — бесплатно и без предоплаты. Или по телефону{' '}
-                <a href={`tel:${VENUE.phoneRaw}`} className="whitespace-nowrap text-acid hover:underline">
+            <div className="sm:col-span-2">
+              <dt className="font-display text-base font-medium text-text">Столы</dt>
+              <dd className="mt-1.5 text-white/65">
+                Бронь бесплатная и без предоплаты —{' '}
+                <a
+                  href="#booking"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    scrollToId('#booking')
+                  }}
+                  className="text-acid underline-offset-2 hover:underline"
+                >
+                  на сайте
+                </a>{' '}
+                или в приложении EXIT 13. Можно и по телефону{' '}
+                <a href={`tel:${VENUE.phoneRaw}`} className="whitespace-nowrap text-acid underline-offset-2 hover:underline">
                   {VENUE.phone}
                 </a>
                 .
-              </div>
+              </dd>
             </div>
-          </div>
-        </Reveal>
+          </dl>
+        </div>
 
-        <Reveal delay={120} className="flex flex-col">
-          <div className="overflow-hidden rounded-card border border-line flex-1 min-h-[20rem]">
+        <div className="flex flex-col">
+          <div className="min-h-[20rem] flex-1 overflow-hidden rounded-card border border-line">
             <iframe
-              title="Карта — EXIT 13"
+              title="EXIT 13 на Яндекс Картах"
               src={mapSrc}
-              className="w-full h-full min-h-[20rem]"
+              className="h-full min-h-[20rem] w-full"
               loading="lazy"
               style={{ border: 0, filter: 'grayscale(1) invert(0.92) contrast(0.9)' }}
             />
           </div>
-          <div className="mt-4 flex items-center justify-between gap-4 rounded-card border border-line p-5">
+          <div className="mt-5 flex items-center justify-between gap-4">
             <div>
-              <div className="font-display text-lg text-white">{VENUE.address}</div>
-              <div className="font-mono text-xs text-dim mt-1">{VENUE.metro}</div>
+              <div className="font-display text-lg font-medium text-text">{VENUE.address}</div>
+              <div className="mt-1 text-sm text-dim">{VENUE.metro}</div>
             </div>
-            <a
-              href={mapLink}
-              target="_blank"
-              rel="noreferrer"
-              className="btn btn-outline btn-sm shrink-0"
-            >
+            <a href={mapLink} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm shrink-0">
               Маршрут
             </a>
           </div>
-        </Reveal>
+        </div>
       </div>
     </section>
   )

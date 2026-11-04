@@ -12,8 +12,7 @@ export default function Menu() {
       <div className="container-x">
         <Reveal className="flex flex-wrap items-end justify-between gap-6 mb-8">
           <div>
-            <div className="mono-label mb-4">Бар · кухня</div>
-            <h2 className="font-display text-4xl sm:text-6xl text-white">Меню</h2>
+            <h2 className="section-title">Меню бара и кухни</h2>
           </div>
           <a href={MENU_URL} target="_blank" rel="noreferrer" className="btn btn-outline">
             QR-меню целиком
@@ -27,8 +26,8 @@ export default function Menu() {
               onClick={() => setTab(i)}
               aria-pressed={i === tab}
               className={`chip transition-colors ${
-                i === tab ? 'chip-acid' : 'chip-dark hover:border-acid/50 hover:text-acid'
-              }`}
+ i === tab ? 'chip-acid' : 'chip-dark hover:text-text'
+ }`}
             >
               {m.group}
             </button>
@@ -46,7 +45,7 @@ export default function Menu() {
           >
             {g.subs.map((s) => (
               <div key={s.sub}>
-                <h3 className="font-mono text-acid text-xs uppercase tracking-[0.12em] mb-3 pb-2 border-b border-acid/20">
+                <h3 className="mb-2 border-b border-line pb-3 font-display text-base font-medium text-acid">
                   {s.sub}
                 </h3>
                 <div>
@@ -55,8 +54,8 @@ export default function Menu() {
                       <div className="flex items-baseline gap-3">
                         <span className="text-white/90">{it.name}</span>
                         <span className="flex-1 border-b border-dotted border-white/15 translate-y-[-3px]" />
-                        {it.vol && <span className="font-mono text-xs text-white/40 whitespace-nowrap">{it.vol}</span>}
-                        <span className="font-mono text-acid whitespace-nowrap">{it.price} ₽</span>
+                        {it.vol && <span className="whitespace-nowrap text-sm text-white/40">{it.vol}</span>}
+                        <span className="whitespace-nowrap font-semibold tabular-nums text-acid">{it.price} ₽</span>
                       </div>
                       {it.desc && <p className="mt-1 text-xs text-white/45 max-w-md">{it.desc}</p>}
                     </div>
@@ -67,7 +66,7 @@ export default function Menu() {
           </motion.div>
         </AnimatePresence>
 
-        <p className="mt-10 font-mono text-xs text-white/40">
+        <p className="mt-10 text-sm text-white/45">
           Меню с ценами — на exit13.space и в приложении EXIT 13.
         </p>
       </div>

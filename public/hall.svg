@@ -76,7 +76,7 @@
 <path d="M6445.3 4393.8c-70.7,70.9 -223.88,85.05 -306.37,28.29"/>
 <path d="M6404.85 4513.4l-204.25 18.86c-42.3,3.91 -79.76,-27.23 -83.67,-69.52l-18.86 -204.25c-3.91,-42.3 27.22,-79.76 69.52,-83.67l204.25 -18.86c42.29,-3.91 79.76,27.22 83.66,69.52l18.87 204.25c3.9,42.29 -27.23,79.76 -69.52,83.66l0 0z"/>
 </g>
-<g fill="#888888" stroke="none" font-family="JetBrains Mono, monospace" text-anchor="middle">
+<g fill="#888888" stroke="none" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif" text-anchor="middle">
 <text x="1670" y="3050" font-size="300" transform="rotate(-90 1670 3050)">БАР</text>
 <text x="4400" y="3150" font-size="300">DJ</text>
 <text x="3210" y="7400" font-size="240">ВХОД</text>

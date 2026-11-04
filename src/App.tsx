@@ -9,7 +9,6 @@ import ClubApp from './components/ClubApp'
 import Gallery from './components/Gallery'
 import Events from './components/Events'
 import Booking from './components/Booking'
-import ScrollProgress from './components/ScrollProgress'
 import Residents from './components/Residents'
 import Info from './components/Info'
 import Footer from './components/Footer'
@@ -33,8 +32,7 @@ export default function App() {
   }, [])
 
   return (
-    <div className="grain">
-      <ScrollProgress />
+    <div>
       <Header />
       <main>
         <Hero />
