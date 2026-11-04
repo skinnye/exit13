@@ -1,4 +1,4 @@
-import { CLUBAPP, HOURS, VENUE } from '../data'
+import { CLUBAPP, HOURS, TABLE_DEPOSIT, VENUE } from '../data'
 import { scrollToId } from '../lib/scroll'
 
 // Карточка клуба в Яндекс Картах (организация «Exit13»): метка на клубе, а не на доме
@@ -44,7 +44,7 @@ export default function Info() {
             <div className="sm:col-span-2">
               <dt className="font-display text-base font-medium text-text">Столы</dt>
               <dd className="mt-1.5 text-white/65">
-                Бронь бесплатная и без предоплаты —{' '}
+                Бронь столов с внесением депозита {TABLE_DEPOSIT} ₽ — засчитаем в счёт бара. Забронировать —{' '}
                 <a
                   href="#booking"
                   onClick={(e) => {

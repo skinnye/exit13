@@ -17,7 +17,7 @@ export default defineConfig(({ command, mode }) => {
     plugins: [react(), tailwindcss()],
     server: {
       // только пути API (бронь, вход, афиша, обложки) — остальное отдаёт сам Vite
-      proxy: { '^/(events|auth|me|bookings|uploads)(/|$)': 'http://localhost:3001' },
+      proxy: { '^/(events|auth|me|bookings|payments|uploads)(/|$)': 'http://localhost:3001' },
     },
     // Мультистраничная сборка: главная + одностраничник для платёжного провайдера.
     build: {

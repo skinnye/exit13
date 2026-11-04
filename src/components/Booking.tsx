@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { API_BASE, DOCS, EVENTS_API } from '../data'
-import { api, ApiError } from '../lib/api'
+import { api, ApiError, loadToken, saveToken } from '../lib/api'
 import { asset } from '../lib/asset'
+import { scrollToId } from '../lib/scroll'
 import Reveal from './Reveal'
 
 // Бронь стола на сайте — тот же аккаунт и та же логика, что в приложении EXIT 13:
 // вечеринка → стол на плане зала → телефон и код из SMS → новому гостю имя и дата
-// рождения (21+) → «Я иду» + бронь. Бронь бесплатная и активна сразу (решение клуба).
+// рождения (21+) → «Я иду» + бронь → оплата депозита на странице ЮKassa (сумма — с сервера,
+// засчитывается в счёт бара). Неоплаченную бронь сервер держит 30 минут, оплата подтверждает.
 // План до входа — публичный (/events/:id/tables/public: только «свободен/занят»),
 // после входа — личный (/events/:id/tables: видна своя бронь, её можно снять).
 // Данные API попадают в DOM только как текст (React экранирует).
@@ -14,8 +16,8 @@ import Reveal from './Reveal'
 type Ev = { id: string; date: string; time: string; title: string }
 type TableStatus = 'free' | 'taken' | 'mine'
 type HallTable = { id: string; label: string; capacity: number; x: number; y: number; status: TableStatus }
-type MyBooking = { id: string; tableId: string; tableLabel: string; status: string }
-type Plan = { hallImage: string | null; tables: HallTable[]; myBooking: MyBooking | null }
+type MyBooking = { id: string; tableId: string; tableLabel: string; status: string; paid: boolean; holdUntil: string | null }
+type Plan = { hallImage: string | null; tables: HallTable[]; myBooking: MyBooking | null; deposit: number }
 type Step = 'phone' | 'code' | 'profile'
 
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/
@@ -26,6 +28,7 @@ const MIN_AGE = 21
 const MAX_EVENTS = 8
 const ACTIVE = ['pending', 'confirmed']
 const REFRESH_MS = 30_000
+const PAYMENT_POLL_MS = 5_000 // пока бронь ждёт оплаты — проверяем чаще (вебхук ЮKassa)
 
 // Екатеринбург — UTC+5 круглый год (перевода часов в РФ нет с 2014).
 function todayYekaterinburg() {
@@ -79,8 +82,16 @@ function parsePlan(data: unknown): Plan {
     // только загрузки сервера клуба (/uploads/…)
     hallImage: hallImage.startsWith('/uploads/') ? hallImage : null,
     tables,
+    deposit: num(p.deposit) ?? 0,
     myBooking: mb
-      ? { id: str(mb.id), tableId: str(mb.tableId), tableLabel: str(mb.tableLabel), status: str(mb.status) }
+      ? {
+          id: str(mb.id),
+          tableId: str(mb.tableId),
+          tableLabel: str(mb.tableLabel),
+          status: str(mb.status),
+          paid: mb.paid === true,
+          holdUntil: str(mb.holdUntil) || null,
+        }
       : null,
   }
 }
@@ -89,6 +100,13 @@ function parsePlan(data: unknown): Plan {
 async function fetchPlan(id: string, auth: string | null): Promise<Plan> {
   return parsePlan(await api<unknown>(auth ? `/events/${id}/tables` : `/events/${id}/tables/public`, { token: auth }))
 }
+
+// '2026-11-05T21:30:00Z' → '02:30' по Екатеринбургу
+function clock(iso: string) {
+  return new Date(iso).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Yekaterinburg' })
+}
+
+const rub = (n: number) => `${new Intl.NumberFormat('ru-RU').format(n)} ₽`
 
 // '9123456789' → '912 345-67-89'
 function formatPhone(d: string) {
@@ -135,7 +153,7 @@ export default function Booking() {
   const [tableId, setTableId] = useState<string | null>(null)
   const [comment, setComment] = useState('')
 
-  const [token, setToken] = useState<string | null>(null)
+  const [token, setToken] = useState<string | null>(loadToken)
   const [step, setStep] = useState<Step | null>(null)
   const [digits, setDigits] = useState('')
   const [consent, setConsent] = useState(false) // обязательное согласие на обработку ПДн (152-ФЗ)
@@ -149,11 +167,14 @@ export default function Booking() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [justBooked, setJustBooked] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
 
   const phone = `+7${digits}`
   const event = events?.find((e) => e.id === eventId) ?? null
   const table = plan?.tables.find((t) => t.id === tableId) ?? null
   const mine = plan?.myBooking && ACTIVE.includes(plan.myBooking.status) ? plan.myBooking : null
+  const deposit = plan?.deposit ?? 0
+  const waitingPayment = !!mine && mine.status === 'pending' && !mine.paid
 
   // только асинхронные setState — сброс состояния делают обработчики (retryEvents, pickEvent)
   const fetchEvents = useCallback(() => {
@@ -206,17 +227,31 @@ export default function Booking() {
           setPlan(p)
           setPlanFailed(false)
         },
-        () => {
-          if (alive) setPlanFailed(true)
+        (e) => {
+          if (!alive) return
+          // токен протух (или вкладку открыли спустя дни) — выходим, план станет публичным
+          if (e instanceof ApiError && e.status === 401) {
+            saveToken(null)
+            setToken(null)
+            return
+          }
+          setPlanFailed(true)
         },
       )
     void load()
-    const timer = window.setInterval(() => void load(), REFRESH_MS)
+    const timer = window.setInterval(() => void load(), waitingPayment ? PAYMENT_POLL_MS : REFRESH_MS)
     return () => {
       alive = false
       window.clearInterval(timer)
     }
-  }, [eventId, token])
+  }, [eventId, token, waitingPayment])
+
+  // вернулись с оплаты ЮKassa (/#booking) — блок брони рисуется после загрузки, докручиваем
+  useEffect(() => {
+    if (window.location.hash !== '#booking') return
+    const timer = window.setTimeout(() => scrollToId('#booking'), 600)
+    return () => window.clearTimeout(timer)
+  }, [])
 
   // таймер повторной SMS
   useEffect(() => {
@@ -227,18 +262,37 @@ export default function Booking() {
 
   const fail = (e: unknown) => setError(e instanceof Error ? e.message : 'Что-то пошло не так. Попробуй ещё раз.')
 
-  // «Я иду» + бронь. Ошибки занятости/повтора — перечитываем план и показываем причину.
+  // Депозит: заказ → ссылка ЮKassa → уходим на оплату (токен в sessionStorage — вернёмся
+  // вошедшими). Повторный вызов отдаёт ту же ссылку (сервер не создаёт второй платёж).
+  async function pay(auth: string, bookingId: string) {
+    const order = await api<{ payUrl: string | null }>('/payments/orders', {
+      method: 'POST',
+      token: auth,
+      body: { kind: 'booking', refId: bookingId },
+    })
+    if (!order.payUrl) throw new Error('Оплата сейчас недоступна. Попробуй позже или позвони в клуб.')
+    saveToken(auth)
+    window.location.assign(order.payUrl)
+  }
+
+  // «Я иду» + бронь (+ оплата депозита). Ошибки занятости/повтора — перечитываем план и
+  // показываем причину; не ушли на оплату — бронь ждёт оплаты, кнопка «Оплатить» в панели.
   async function submit(auth: string) {
     if (!eventId || !tableId) return
     setBusy(true)
     setError(null)
+    setNotice(null)
     try {
       await api(`/events/${eventId}/rsvp`, { method: 'POST', token: auth })
-      await api(`/events/${eventId}/bookings`, {
+      const booking = await api<{ id: string; deposit?: number }>(`/events/${eventId}/bookings`, {
         method: 'POST',
         token: auth,
-        body: { tableId, ...(comment.trim() ? { comment: comment.trim() } : {}) },
+        body: { tableId, ...(comment.trim() ? { comment: comment.trim() } : {}), ...(deposit > 0 ? { pay: true } : {}) },
       })
+      if ((booking.deposit ?? 0) > 0) {
+        await pay(auth, booking.id)
+        return
+      }
       setJustBooked(true)
       setStep(null)
       setTableId(null)
@@ -289,6 +343,7 @@ export default function Booking() {
       })
       const me = await api<{ hasBirthday?: boolean }>('/me', { token: auth })
       setToken(auth)
+      saveToken(auth)
       if (!me.hasBirthday) {
         setStep('profile')
         setBusy(false)
@@ -328,14 +383,32 @@ export default function Booking() {
     }
   }
 
-  async function onCancel() {
-    if (!mine || !token || !eventId) return
-    if (!window.confirm(`Снять бронь стола ${mine.tableLabel}?`)) return
+  async function onPay() {
+    if (!mine || !token) return
     setBusy(true)
     setError(null)
     try {
-      await api(`/bookings/${mine.id}`, { method: 'DELETE', token })
+      await pay(token, mine.id)
+    } catch (err) {
+      fail(err)
+      setBusy(false)
+    }
+  }
+
+  async function onCancel() {
+    if (!mine || !token || !eventId) return
+    const ask = mine.paid
+      ? `Снять бронь стола ${mine.tableLabel}? Депозит ${rub(deposit)} вернём.`
+      : `Снять бронь стола ${mine.tableLabel}?`
+    if (!window.confirm(ask)) return
+    setBusy(true)
+    setError(null)
+    try {
+      const res = await api<{ refund?: boolean; amount?: number }>(`/bookings/${mine.id}`, { method: 'DELETE', token })
       setJustBooked(false)
+      if (res.refund) {
+        setNotice(`Бронь снята. Депозит ${rub(res.amount ?? deposit)} вернём тем же способом оплаты в течение 10 дней.`)
+      }
     } catch (err) {
       fail(err)
     } finally {
@@ -353,8 +426,9 @@ export default function Booking() {
         <Reveal className="max-w-3xl">
           <h2 className="section-title">Забронировать стол</h2>
           <p className="mt-5 text-lg text-white/65 max-w-2xl">
-            Бесплатно и без предоплаты. Выбери вечеринку и стол на плане зала, подтверди номер телефона —
-            бронь действует сразу.
+            {deposit > 0
+              ? `Депозит ${rub(deposit)} за стол — засчитаем в счёт бара. Выбери вечеринку и стол на плане зала, подтверди номер телефона и оплати — бронь подтвердится сразу.`
+              : 'Выбери вечеринку и стол на плане зала, подтверди номер телефона — бронь подтвердится сразу.'}
           </p>
         </Reveal>
 
@@ -436,6 +510,30 @@ export default function Booking() {
               <div className="rounded-card border border-line bg-panel p-6">
                 {planFailed && !plan ? (
                   <p className="text-fog">Не удалось загрузить план зала. Обнови страницу.</p>
+                ) : mine && waitingPayment ? (
+                  <div className="flex flex-col gap-4">
+                    <p className="text-sm font-semibold text-acid">Ждём оплату депозита</p>
+                    <div className="font-display text-4xl font-semibold text-white">Стол {mine.tableLabel}</div>
+                    {event ? (
+                      <p className="text-fog">
+                        {event.title}, {dayLabel(event.date)}
+                        {event.time ? `, ${event.time}` : ''}
+                      </p>
+                    ) : null}
+                    <p className="text-white/70">
+                      {mine.holdUntil ? `Держим стол до ${clock(mine.holdUntil)}. ` : ''}
+                      Оплати депозит {rub(deposit)} — бронь подтвердится, а деньги засчитаем в счёт бара. Уже
+                      оплатил — подтверждение появится здесь через минуту.
+                    </p>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button type="button" className="btn btn-acid" disabled={busy} onClick={onPay}>
+                        {busy ? 'Открываю оплату…' : `Оплатить ${rub(deposit)}`}
+                      </button>
+                      <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={onCancel}>
+                        Отменить
+                      </button>
+                    </div>
+                  </div>
                 ) : mine ? (
                   <div className="flex flex-col gap-4">
                     <p className="text-sm font-semibold text-acid">{justBooked ? 'Стол забронирован' : 'Твоя бронь'}</p>
@@ -444,6 +542,11 @@ export default function Booking() {
                       <p className="text-fog">
                         {event.title}, {dayLabel(event.date)}
                         {event.time ? `, ${event.time}` : ''}
+                      </p>
+                    ) : null}
+                    {mine.paid ? (
+                      <p className="text-white/80">
+                        Депозит {rub(deposit)} оплачен — засчитаем в счёт бара. Отменишь до начала вечеринки — вернём.
                       </p>
                     ) : null}
                     <p className="text-white/70">
@@ -573,7 +676,7 @@ export default function Booking() {
                       aria-label="Дата рождения"
                     />
                     <button type="submit" className="btn btn-acid self-start" disabled={busy}>
-                      {busy ? 'Бронирую…' : 'Забронировать'}
+                      {busy ? 'Бронирую…' : deposit > 0 ? `Перейти к оплате ${rub(deposit)}` : 'Забронировать'}
                     </button>
                   </form>
                 ) : table ? (
@@ -582,6 +685,11 @@ export default function Booking() {
                     <p className="text-fog">
                       До {table.capacity} гостей{event ? `. ${event.title}, ${dayLabel(event.date)}` : ''}
                     </p>
+                    {deposit > 0 ? (
+                      <p className="text-white/80">
+                        Депозит {rub(deposit)} — засчитаем в счёт бара. Отменишь до начала вечеринки — вернём.
+                      </p>
+                    ) : null}
                     <textarea
                       className={`${input} min-h-24 resize-y`}
                       value={comment}
@@ -590,7 +698,7 @@ export default function Booking() {
                       aria-label="Пожелания к брони"
                     />
                     <button type="button" className="btn btn-acid self-start" disabled={busy} onClick={onBook}>
-                      {busy ? 'Бронирую…' : 'Забронировать'}
+                      {busy ? 'Бронирую…' : deposit > 0 ? `Забронировать за ${rub(deposit)}` : 'Забронировать'}
                     </button>
                   </div>
                 ) : (
@@ -601,11 +709,18 @@ export default function Booking() {
                       выбираешь стол.
                     </p>
                     <p className="text-sm text-dim">
-                      Бронь бесплатная. Передумал — снимешь её здесь же или в приложении EXIT 13.
+                      {deposit > 0
+                        ? `Депозит ${rub(deposit)} засчитаем в счёт бара. Передумал до начала вечеринки — снимешь бронь здесь же, деньги вернём.`
+                        : 'Передумал — снимешь бронь здесь же или в приложении EXIT 13.'}
                     </p>
                   </div>
                 )}
 
+                {notice ? (
+                  <p className="mt-4 text-sm text-fog" role="status">
+                    {notice}
+                  </p>
+                ) : null}
                 {error ? (
                   <p className="mt-4 text-sm text-magenta" role="alert">
                     {error}
