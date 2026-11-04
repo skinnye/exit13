@@ -65,7 +65,7 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <a href={VENUE.tg} target="_blank" rel="noreferrer" className="btn btn-acid btn-sm hidden sm:inline-flex">
+            <a href={VENUE.tg} target="_blank" rel="noreferrer" className="btn btn-acid btn-sm hidden text-white sm:inline-flex">
               Афиша в TG
             </a>
             <button
