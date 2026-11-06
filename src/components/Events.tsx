@@ -115,6 +115,14 @@ const rub = (n: number) => `${new Intl.NumberFormat('ru-RU').format(n)} ₽`
 
 function PriceLine({ early, late }: { early?: number; late?: number }) {
   if (!early && !late) return <span className="text-fog">Цена — в приложении</span>
+  // вход депозитный (решение клуба 2026-11-06): одна сумма — это минимальный депозит
+  if (!late || early === late) {
+    return (
+      <span className="whitespace-nowrap">
+        депозит от <span className="text-acid">{rub(early ?? late ?? 0)}</span>
+      </span>
+    )
+  }
   return (
     <>
       {early && (
@@ -273,11 +281,11 @@ export default function Events() {
         </div>
 
         <div className="mt-6 space-y-1.5 text-sm text-dim">
-          {live && <p>Цена — за вход одного гостя: до 01:00 и после 01:00.</p>}
+          {live && <p>Вход — депозит от 1 000 ₽ на гостя, вся сумма идёт в счёт бара.</p>}
           <p>
             {CLUBAPP.payment.online} {CLUBAPP.payment.onsite}
           </p>
-          <p>Бронь стола — с депозитом {TABLE_DEPOSIT_TEXT}, его засчитаем в счёт бара. По телефону — {VENUE.phone}.</p>
+          <p>Бронь стола — с депозитом {TABLE_DEPOSIT_TEXT}: он включает вход для компании и засчитывается в счёт бара. По телефону — {VENUE.phone}.</p>
         </div>
       </div>
     </section>
