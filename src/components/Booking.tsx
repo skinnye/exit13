@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { API_BASE, DOCS, EVENTS_API, TABLE_DEPOSIT } from '../data'
+import { API_BASE, BOOKING_HOLD_MINUTES, DOCS, EVENTS_API, TABLE_DEPOSIT } from '../data'
 import { api, ApiError, loadToken, saveToken } from '../lib/api'
 import { asset } from '../lib/asset'
 import { scrollToId } from '../lib/scroll'
@@ -16,8 +16,18 @@ import Reveal from './Reveal'
 type Ev = { id: string; date: string; time: string; title: string }
 type TableStatus = 'free' | 'taken' | 'mine'
 type HallTable = { id: string; label: string; capacity: number; deposit: number; x: number; y: number; status: TableStatus }
-type MyBooking = { id: string; tableId: string; tableLabel: string; status: string; paid: boolean; holdUntil: string | null }
-type Plan = { hallImage: string | null; tables: HallTable[]; myBooking: MyBooking | null; deposit: number }
+// orderAmount — сумма заказа по брони (оплаченного или открытого): депозит стола могли поменять после
+type MyBooking = {
+  id: string
+  tableId: string
+  tableLabel: string
+  status: string
+  paid: boolean
+  holdUntil: string | null
+  orderAmount: number | null
+}
+// eventId и personal — чей это план: вечеринка и личный (после входа) или публичный
+type Plan = { eventId: string; personal: boolean; hallImage: string | null; tables: HallTable[]; myBooking: MyBooking | null; deposit: number }
 type Step = 'phone' | 'code' | 'profile'
 
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/
@@ -63,7 +73,7 @@ function parseEvents(data: unknown): Ev[] {
   return out.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)).slice(0, MAX_EVENTS)
 }
 
-function parsePlan(data: unknown): Plan {
+function parsePlan(data: unknown, eventId: string, personal: boolean): Plan {
   const p = (data && typeof data === 'object' ? data : {}) as Record<string, unknown>
   const tables: HallTable[] = []
   for (const raw of Array.isArray(p.tables) ? p.tables : []) {
@@ -79,6 +89,8 @@ function parsePlan(data: unknown): Plan {
   const mb = p.myBooking && typeof p.myBooking === 'object' ? (p.myBooking as Record<string, unknown>) : null
   const hallImage = str(p.hallImage)
   return {
+    eventId,
+    personal,
     // только загрузки сервера клуба (/uploads/…)
     hallImage: hallImage.startsWith('/uploads/') ? hallImage : null,
     tables,
@@ -91,15 +103,65 @@ function parsePlan(data: unknown): Plan {
           status: str(mb.status),
           paid: mb.paid === true,
           holdUntil: str(mb.holdUntil) || null,
+          orderAmount: num(mb.orderAmount),
         }
       : null,
   }
 }
 
-// до входа — публичная схема (free/taken), после — личная (видна своя бронь)
+// до входа — публичная схема (free/taken), после — личная (видна своя бронь).
+// ?pay=1 — сайт понимает депозиты: сервер отдаёт и неоплаченные брони, которые держит до оплаты.
 async function fetchPlan(id: string, auth: string | null): Promise<Plan> {
-  return parsePlan(await api<unknown>(auth ? `/events/${id}/tables` : `/events/${id}/tables/public`, { token: auth }))
+  const path = auth ? `/events/${id}/tables?pay=1` : `/events/${id}/tables/public?pay=1`
+  return parsePlan(await api<unknown>(path, { token: auth }), id, !!auth)
 }
+
+// Бронь, ушедшая на оплату, — в sessionStorage вкладки (переживает уход на ЮKassa). Если в личном
+// плане её больше нет, стол не дождался оплаты: сервер снимает неоплаченную бронь через
+// BOOKING_HOLD_MINUTES, а опоздавшую оплату ставит на возврат.
+const PENDING_KEY = 'exit13.site.pendingBooking'
+type Pending = { eventId: string; bookingId: string }
+
+function loadPending(): Pending | null {
+  try {
+    const raw: unknown = JSON.parse(sessionStorage.getItem(PENDING_KEY) ?? 'null')
+    if (!raw || typeof raw !== 'object') return null
+    const { eventId, bookingId } = raw as Record<string, unknown>
+    return typeof eventId === 'string' && typeof bookingId === 'string' ? { eventId, bookingId } : null
+  } catch {
+    return null
+  }
+}
+
+function savePending(p: Pending | null) {
+  try {
+    if (p) sessionStorage.setItem(PENDING_KEY, JSON.stringify(p))
+    else sessionStorage.removeItem(PENDING_KEY)
+  } catch {
+    // хранилище недоступно — подсказка после оплаты просто не покажется
+  }
+}
+
+// true — бронь, ушедшая на оплату, снята по сроку (метку гасим); оплачена — тоже гасим, ждёт — держим
+function holdLost(plan: Plan): boolean {
+  const p = loadPending()
+  if (!p || !plan.personal || plan.eventId !== p.eventId) return false
+  const my = plan.myBooking
+  if (my && my.id === p.bookingId && ACTIVE.includes(my.status)) {
+    if (my.paid || my.status === 'confirmed') savePending(null)
+    return false
+  }
+  savePending(null)
+  return true
+}
+
+// сервер не пускает на RSVP и бронь без даты рождения: 403/400 с сообщением про неё
+const needsBirthday = (e: unknown) =>
+  e instanceof ApiError && (e.status === 403 || e.status === 400) && /рожд/i.test(e.message)
+
+const HOLD_LOST =
+  `Бронь снята: неоплаченный стол держим ${BOOKING_HOLD_MINUTES} минут. Если оплата прошла позже — ` +
+  'депозит вернём тем же способом в течение 10 дней. Стол ещё нужен — выбери его заново.'
 
 // '2026-11-05T21:30:00Z' → '02:30' по Екатеринбургу
 function clock(iso: string) {
@@ -177,7 +239,8 @@ export default function Booking() {
   const deposit = plan?.deposit ?? 0
   const sameDeposit = !!plan && plan.tables.every((t) => t.deposit === plan.tables[0]?.deposit)
   const tableDeposit = table?.deposit ?? 0
-  const mineDeposit = (mine && plan?.tables.find((t) => t.id === mine.tableId)?.deposit) || deposit
+  // у созданной брони — сумма её заказа; нет заказа — текущий депозит стола
+  const mineDeposit = (mine && (mine.orderAmount || plan?.tables.find((t) => t.id === mine.tableId)?.deposit)) || deposit
   const waitingPayment = !!mine && mine.status === 'pending' && !mine.paid
 
   // только асинхронные setState — сброс состояния делают обработчики (retryEvents, pickEvent)
@@ -185,8 +248,10 @@ export default function Booking() {
     api<unknown>(EVENTS_API.slice(API_BASE.length))
       .then((data) => {
         const list = parseEvents(data)
+        // вернулись с оплаты — открываем вечеринку той брони, а не ближайшую
+        const back = list.find((e) => e.id === loadPending()?.eventId)?.id
         setEvents(list)
-        setEventId((cur) => cur ?? list[0]?.id ?? null)
+        setEventId((cur) => cur ?? back ?? list[0]?.id ?? null)
       })
       .catch(() => setEventsFailed(true))
   }, [])
@@ -194,8 +259,10 @@ export default function Booking() {
   // перечитать план после действия гостя (бронь, снятие)
   async function reloadPlan(id: string, auth: string | null) {
     try {
-      setPlan(await fetchPlan(id, auth))
+      const p = await fetchPlan(id, auth)
+      setPlan(p)
       setPlanFailed(false)
+      if (holdLost(p)) setNotice(HOLD_LOST)
     } catch {
       setPlanFailed(true)
     }
@@ -209,12 +276,13 @@ export default function Booking() {
     fetchEvents()
   }
 
-  // смена вечеринки: новый план, выбор стола сбрасываем
+  // смена вечеринки: новый план, выбор стола и шаг входа сбрасываем (стол выбирают заново)
   function pickEvent(id: string) {
-    if (id === eventId) return
+    if (id === eventId || busy) return
     setEventId(id)
     setPlan(null)
     setTableId(null)
+    setStep(null)
     setJustBooked(false)
     setError(null)
   }
@@ -230,6 +298,7 @@ export default function Booking() {
           if (!alive) return
           setPlan(p)
           setPlanFailed(false)
+          if (holdLost(p)) setNotice(HOLD_LOST)
         },
         (e) => {
           if (!alive) return
@@ -268,11 +337,13 @@ export default function Booking() {
 
   // Депозит: заказ → ссылка ЮKassa → уходим на оплату (токен в sessionStorage — вернёмся
   // вошедшими). Повторный вызов отдаёт ту же ссылку (сервер не создаёт второй платёж).
-  async function pay(auth: string, bookingId: string) {
+  // returnTo: 'site' — страница результата оплаты ведёт обратно на сайт.
+  async function pay(auth: string, evId: string, bookingId: string) {
+    savePending({ eventId: evId, bookingId })
     const order = await api<{ payUrl: string | null }>('/payments/orders', {
       method: 'POST',
       token: auth,
-      body: { kind: 'booking', refId: bookingId },
+      body: { kind: 'booking', refId: bookingId, returnTo: 'site' },
     })
     if (!order.payUrl) throw new Error('Оплата сейчас недоступна. Попробуй позже или позвони в клуб.')
     saveToken(auth)
@@ -282,7 +353,13 @@ export default function Booking() {
   // «Я иду» + бронь (+ оплата депозита). Ошибки занятости/повтора — перечитываем план и
   // показываем причину; не ушли на оплату — бронь ждёт оплаты, кнопка «Оплатить» в панели.
   async function submit(auth: string) {
-    if (!eventId || !tableId) return
+    if (!eventId || !tableId) {
+      // стол сбросили на шаге входа (сменили вечеринку) — выбираем заново, форму не блокируем
+      setBusy(false)
+      setStep(null)
+      setError('Выбери стол на плане')
+      return
+    }
     setBusy(true)
     setError(null)
     setNotice(null)
@@ -294,7 +371,7 @@ export default function Booking() {
         body: { tableId, ...(comment.trim() ? { comment: comment.trim() } : {}), ...(tableDeposit > 0 ? { pay: true } : {}) },
       })
       if ((booking.deposit ?? 0) > 0) {
-        await pay(auth, booking.id)
+        await pay(auth, eventId, booking.id)
         return
       }
       setJustBooked(true)
@@ -302,10 +379,16 @@ export default function Booking() {
       setTableId(null)
       setComment('')
     } catch (e) {
-      fail(e)
-      if (e instanceof ApiError && (e.status === 409 || e.status === 400)) {
-        setTableId(null)
-        setStep(null)
+      if (needsBirthday(e)) {
+        // сервер не пускает без даты рождения — ведём на шаг профиля, выбранный стол оставляем
+        setError(`Укажи имя и дату рождения — вход строго ${MIN_AGE}+`)
+        setStep('profile')
+      } else {
+        fail(e)
+        if (e instanceof ApiError && (e.status === 409 || e.status === 400)) {
+          setTableId(null)
+          setStep(null)
+        }
       }
     } finally {
       await reloadPlan(eventId, auth)
@@ -313,10 +396,31 @@ export default function Booking() {
     }
   }
 
-  function onBook() {
+  // Вошли раньше (токен из sessionStorage) — сначала проверяем дату рождения: без неё (новый гость
+  // ушёл с шага «Пара слов о себе» перезагрузкой) — снова на шаг профиля, гейт 21+.
+  async function onBook() {
     setError(null)
-    if (token) void submit(token)
-    else setStep('phone')
+    if (!token) return setStep('phone')
+    setBusy(true)
+    try {
+      const me = await api<{ hasBirthday?: boolean }>('/me', { token })
+      if (!me.hasBirthday) {
+        setStep('profile')
+        setBusy(false)
+        return
+      }
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) {
+        saveToken(null)
+        setToken(null)
+        setStep('phone')
+      } else {
+        fail(e)
+      }
+      setBusy(false)
+      return
+    }
+    await submit(token)
   }
 
   async function onRequestCode(e?: FormEvent) {
@@ -388,11 +492,11 @@ export default function Booking() {
   }
 
   async function onPay() {
-    if (!mine || !token) return
+    if (!mine || !token || !eventId) return
     setBusy(true)
     setError(null)
     try {
-      await pay(token, mine.id)
+      await pay(token, eventId, mine.id)
     } catch (err) {
       fail(err)
       setBusy(false)
@@ -405,6 +509,8 @@ export default function Booking() {
       ? `Снять бронь стола ${mine.tableLabel}? Депозит ${rub(mineDeposit)} вернём.`
       : `Снять бронь стола ${mine.tableLabel}?`
     if (!window.confirm(ask)) return
+    // сам снимает — подсказка «бронь снята по сроку» не нужна
+    if (loadPending()?.bookingId === mine.id) savePending(null)
     setBusy(true)
     setError(null)
     try {
@@ -432,7 +538,7 @@ export default function Booking() {
           <p className="mt-5 text-lg text-white/65 max-w-2xl">
             {/* до загрузки плана (или без вечеринок) — сумма из текстов сайта */}
             {(plan ? deposit : TABLE_DEPOSIT) > 0
-              ? `Депозит за стол — ${plan && sameDeposit ? '' : 'от '}${rub(plan ? deposit : TABLE_DEPOSIT)}: он включает вход для компании по числу мест за столом и засчитывается в счёт бара. Выбери вечеринку и стол на плане зала, подтверди номер телефона и оплати — бронь подтвердится сразу.`
+              ? `Депозит за стол — ${plan && sameDeposit ? '' : 'от '}${rub(plan ? deposit : TABLE_DEPOSIT)}: он включает вход для компании по числу мест за столом и засчитывается в счёт бара. Выбери вечеринку и стол на плане зала, подтверди номер телефона и оплати депозит — бронь подтвердится сразу. Неоплаченный стол держим ${BOOKING_HOLD_MINUTES} минут.`
               : 'Выбери вечеринку и стол на плане зала, подтверди номер телефона — бронь подтвердится сразу.'}
           </p>
         </Reveal>
@@ -526,7 +632,9 @@ export default function Booking() {
                       </p>
                     ) : null}
                     <p className="text-white/70">
-                      {mine.holdUntil ? `Держим стол до ${clock(mine.holdUntil)}. ` : ''}
+                      {mine.holdUntil
+                        ? `Держим стол до ${clock(mine.holdUntil)} — не оплатишь к этому времени, бронь снимется. `
+                        : `Держим стол ${BOOKING_HOLD_MINUTES} минут с момента брони — не оплатишь, бронь снимется. `}
                       Оплати депозит {rub(mineDeposit)} — бронь подтвердится, а деньги засчитаем в счёт бара. Уже
                       оплатил — подтверждение появится здесь через минуту.
                     </p>
@@ -653,7 +761,7 @@ export default function Booking() {
                   <form className="flex flex-col gap-4" onSubmit={onProfile}>
                     <h3 className="font-display text-xl font-medium text-text">Пара слов о себе</h3>
                     <p className="text-white/70">
-                      Ты у нас впервые. Имя увидит охрана на входе, дата рождения нужна для проверки {MIN_AGE}+.
+                      Имя увидит охрана на входе, дата рождения нужна для проверки {MIN_AGE}+.
                     </p>
                     <input
                       className={input}
@@ -692,7 +800,9 @@ export default function Booking() {
                     </p>
                     {tableDeposit > 0 ? (
                       <p className="text-white/80">
-                        Депозит {rub(tableDeposit)} — засчитаем в счёт бара, вход для {table.capacity} гостей включён. Отменишь до начала вечеринки — вернём.
+                        Депозит {rub(tableDeposit)} — засчитаем в счёт бара, вход для {table.capacity} гостей включён.
+                        Оплатить нужно за {BOOKING_HOLD_MINUTES} минут — иначе бронь снимется. Отменишь до начала
+                        вечеринки — вернём.
                       </p>
                     ) : null}
                     <textarea

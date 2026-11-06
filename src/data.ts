@@ -7,6 +7,8 @@
 // каждого стола приходит с сервера (Table.deposit), засчитывается в счёт бара.
 export const TABLE_DEPOSIT = 5000 // наименьший — «от 5 000 ₽»
 export const TABLE_DEPOSIT_TEXT = 'от 5 000 ₽ (стол 9 — 10 000 ₽)'
+// Неоплаченную бронь сервер держит столько минут (BOOKING_HOLD_MINUTES на бэке) — для текстов.
+export const BOOKING_HOLD_MINUTES = 30
 
 export const VENUE = {
   name: 'EXIT 13',
@@ -90,8 +92,8 @@ export const MENU: MenuGroup[] = [
         items: [
           { name: 'Long Island', vol: '250 мл', price: '900', desc: 'Водка, текила, джин, ром белый, ликер triple sec, напиток газированный coca cola' },
           { name: 'Exit 13', vol: '150 мл', price: '650', desc: 'Водка, вермут Martini Bianco, сироп, сок лимона, мята' },
-          { name: 'Porn Star Martini', vol: '120 мл', price: '800', desc: 'Водка "Ваниль", пюре "Маракуйя", сок лимона, бело яичный, вино игристое Brut' },
-          { name: 'Basil Smash', vol: '250 мл', price: '800', desc: 'Джин, кордиал Базелик, сироп, сок лимона, белок яичный' },
+          { name: 'Porn Star Martini', vol: '120 мл', price: '800', desc: 'Водка "Ваниль", пюре "Маракуйя", сок лимона, белок яичный, вино игристое Brut' },
+          { name: 'Basil Smash', vol: '250 мл', price: '800', desc: 'Джин, кордиал Базилик, сироп, сок лимона, белок яичный' },
           { name: 'Gold Rush', vol: '250 мл', price: '800', desc: 'Ром белый, лимонад "Саперави", ликер Ligare Spritz' },
           { name: 'Clover Club', vol: '250 мл', price: '850', desc: 'Джин, пюре малины, сок лимона, белок яичный' },
           { name: 'Mai Tai', vol: '120 мл', price: '800', desc: 'Ром белый, ром тёмный, ликер triple sec, сироп миндаль, сок лайма' },
@@ -110,7 +112,7 @@ export const MENU: MenuGroup[] = [
         items: [
           { name: 'Varvara', vol: '250 мл', price: '600', desc: 'Джин б/а, вино игристое б/а, сироп, сок лимона, мята' },
           { name: 'Negroni', vol: '150 мл', price: '600', desc: 'Джин б/а, вермут б/а, биттер б/а' },
-          { name: 'Aperol spritz', vol: '200 мл', price: '600', desc: 'Italian Orange Spritz б/а, вино игрстое б/а' },
+          { name: 'Aperol spritz', vol: '200 мл', price: '600', desc: 'Italian Orange Spritz б/а, вино игристое б/а' },
           { name: 'Gin Tonic', vol: '250 мл', price: '600', desc: 'Джин б/а, напиток газированный Tonic' },
         ],
       },
@@ -134,7 +136,7 @@ export const MENU: MenuGroup[] = [
           { name: 'Auchentoshan 12 Years Old', vol: '50 мл', price: '750' },
           { name: 'Singleton of Dufftown 12 Year Old', vol: '50 мл', price: '750' },
           { name: 'Chivas Regal 12 Years Old', vol: '50 мл', price: '750' },
-          { name: 'Jack Daniel Tennessee', vol: '50 мл', price: '700' },
+          { name: 'Jack Daniel’s Tennessee', vol: '50 мл', price: '700' },
           { name: 'Jameson', vol: '50 мл', price: '650' },
         ],
       },
@@ -195,7 +197,7 @@ export const MENU: MenuGroup[] = [
           { name: 'Jagermeister', vol: '50 мл', price: '650' },
           { name: 'Absent', vol: '50 мл', price: '650' },
           { name: 'Sambuca', vol: '50 мл', price: '650' },
-          { name: 'Dimoncello', vol: '50 мл', price: '350' },
+          { name: 'Limoncello', vol: '50 мл', price: '350' },
           { name: 'Mariba сливки/шоколад', vol: '50 мл', price: '300' },
         ],
       },
@@ -229,7 +231,7 @@ export const MENU: MenuGroup[] = [
       {
         sub: 'Игристое вино',
         items: [
-          { name: 'Crewman', vol: '0,75', price: '3 500' },
+          { name: 'Crewman', vol: '0,75 л', price: '3 500' },
           { name: 'Prosecco', vol: '0,75 л', price: '3 000' },
           { name: 'Cava', vol: '0,75 л', price: '3 000' },
         ],
@@ -237,7 +239,7 @@ export const MENU: MenuGroup[] = [
       {
         sub: 'Тихое вино',
         items: [
-          { name: 'Chianti (Италия)- Красное сухое', vol: '0,75 л', price: '3 000' },
+          { name: 'Chianti (Италия) — Красное сухое', vol: '0,75 л', price: '3 000' },
           { name: 'Zinfandel (Италия) — Красное сухое', vol: '0,75 л', price: '3 000' },
           { name: 'Primitivo (Италия) — Красное сухое', vol: '0,75 л', price: '3 000' },
           { name: 'Pinot Grigio (Италия) — Белое сухое', vol: '0,75 л', price: '2 500' },
@@ -278,9 +280,9 @@ export const MENU: MenuGroup[] = [
       {
         sub: 'Десерты',
         items: [
-          { name: 'Мороженное ванильное', vol: '50 гр', price: '100' },
-          { name: 'Мороженное вишневое', vol: '50 гр', price: '100' },
-          { name: 'Мороженное с шоколадной крошкой', vol: '50 гр', price: '100' },
+          { name: 'Мороженое ванильное', vol: '50 гр', price: '100' },
+          { name: 'Мороженое вишневое', vol: '50 гр', price: '100' },
+          { name: 'Мороженое с шоколадной крошкой', vol: '50 гр', price: '100' },
           { name: 'Топпинг в ассортименте', price: '50' },
         ],
       },
@@ -290,7 +292,7 @@ export const MENU: MenuGroup[] = [
           { name: 'Гренки чесночные', vol: '100 гр', price: '400' },
           { name: 'Соломка мясная', vol: '100 гр', price: '400' },
           { name: 'Сыр копченый', vol: '100 гр', price: '350' },
-          { name: 'Сыр жаренный "Воздушный"', vol: '100 гр', price: '350' },
+          { name: 'Сыр жареный "Воздушный"', vol: '100 гр', price: '350' },
           { name: 'Кальмар стружка', vol: '100 гр', price: '400' },
           { name: 'Фисташки', vol: '100 гр', price: '400' },
           { name: 'Арахис солено-жареный', vol: '100 гр', price: '200' },
@@ -420,7 +422,7 @@ export const CLUBAPP = {
     { t: 'Уведомления', d: 'Сервисные пуши — например, о брони. Рекламные рассылки — только с твоего согласия.' },
   ],
   payment: {
-    online: 'Онлайн — в приложении: карта, SberPay, СБП (ЮKassa).',
+    online: 'Онлайн через ЮKassa (карта, SberPay, СБП): депозит за вход — в приложении, депозит за стол — на сайте и в приложении.',
     onsite: 'На месте — карта, наличные, QR и СБП.',
   },
   // приложение в сторах с 2026-10-28 (Google Play) и 2026-11-04 (App Store)

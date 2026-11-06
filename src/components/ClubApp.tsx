@@ -147,7 +147,7 @@ export default function ClubApp() {
 
         <div className="mt-14 grid gap-10 border-t border-line pt-10 lg:grid-cols-2">
           <div>
-            <h3 className="font-display text-base font-medium text-text">Оплата входа</h3>
+            <h3 className="font-display text-base font-medium text-text">Оплата</h3>
             <p className="mt-2 text-white/80">{CLUBAPP.payment.online}</p>
             <p className="mt-1 text-fog">{CLUBAPP.payment.onsite}</p>
           </div>
