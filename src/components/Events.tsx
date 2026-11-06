@@ -274,7 +274,7 @@ export default function Events() {
           <p>
             {CLUBAPP.payment.online} {CLUBAPP.payment.onsite}
           </p>
-          <p>Бронь стола — с депозитом {TABLE_DEPOSIT_TEXT}: он включает вход для компании и засчитывается в счёт бара. По телефону — {VENUE.phone}.</p>
+          <p>Бронь стола — с депозитом {TABLE_DEPOSIT_TEXT}: он включает вход для компании по числу мест за столом и засчитывается в счёт бара. По телефону — {VENUE.phone}.</p>
         </div>
       </div>
     </section>

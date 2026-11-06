@@ -47,7 +47,7 @@ export default function Info() {
             <div className="sm:col-span-2">
               <dt className="font-display text-base font-medium text-text">Столы</dt>
               <dd className="mt-1.5 text-white/65">
-                Бронь столов с внесением депозита {TABLE_DEPOSIT_TEXT} — он включает вход для компании и засчитывается в счёт бара. Забронировать —{' '}
+                Бронь столов с внесением депозита {TABLE_DEPOSIT_TEXT} — он включает вход для компании по числу мест за столом и засчитывается в счёт бара. Забронировать —{' '}
                 <a
                   href="#booking"
                   onClick={(e) => {
