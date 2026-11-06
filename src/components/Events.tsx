@@ -113,30 +113,14 @@ const NOTE: Record<State['status'], string> = {
 
 const rub = (n: number) => `${new Intl.NumberFormat('ru-RU').format(n)} ₽`
 
-function PriceLine({ early, late }: { early?: number; late?: number }) {
-  if (!early && !late) return <span className="text-fog">Цена — в приложении</span>
-  // вход депозитный (решение клуба 2026-11-06): одна сумма — это минимальный депозит
-  if (!late || early === late) {
-    return (
-      <span className="whitespace-nowrap">
-        депозит от <span className="text-acid">{rub(early ?? late ?? 0)}</span>
-      </span>
-    )
-  }
+// Вход депозитный (решение клуба 2026-11-06): одна сумма — минимальный депозит, гость выбирает
+// сумму не меньше; деления «до/после 01:00» нет.
+function PriceLine({ early }: { early?: number; late?: number }) {
+  if (!early) return <span className="text-fog">Цена — в приложении</span>
   return (
-    <>
-      {early && (
-        <span className="whitespace-nowrap">
-          до 01:00 — <span className="text-acid">{rub(early)}</span>
-        </span>
-      )}
-      {early && late && <br />}
-      {late && (
-        <span className="whitespace-nowrap">
-          после 01:00 — <span className="text-acid">{rub(late)}</span>
-        </span>
-      )}
-    </>
+    <span className="whitespace-nowrap">
+      депозит от <span className="text-acid">{rub(early)}</span>
+    </span>
   )
 }
 
@@ -281,7 +265,12 @@ export default function Events() {
         </div>
 
         <div className="mt-6 space-y-1.5 text-sm text-dim">
-          {live && <p>Вход — депозит от 1 000 ₽ на гостя, вся сумма идёт в счёт бара.</p>}
+          {live && (
+            <p>
+              Вход — депозит от 1 000 ₽ на гостя: сумму выбираешь сам, к ней сразу +20%, и всё идёт в счёт бара.
+              Платишь 1 000 ₽ — на депозите 1 200 ₽.
+            </p>
+          )}
           <p>
             {CLUBAPP.payment.online} {CLUBAPP.payment.onsite}
           </p>
