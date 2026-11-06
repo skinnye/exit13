@@ -15,7 +15,7 @@ import Reveal from './Reveal'
 
 type Ev = { id: string; date: string; time: string; title: string }
 type TableStatus = 'free' | 'taken' | 'mine'
-type HallTable = { id: string; label: string; capacity: number; x: number; y: number; status: TableStatus }
+type HallTable = { id: string; label: string; capacity: number; deposit: number; x: number; y: number; status: TableStatus }
 type MyBooking = { id: string; tableId: string; tableLabel: string; status: string; paid: boolean; holdUntil: string | null }
 type Plan = { hallImage: string | null; tables: HallTable[]; myBooking: MyBooking | null; deposit: number }
 type Step = 'phone' | 'code' | 'profile'
@@ -74,7 +74,7 @@ function parsePlan(data: unknown): Plan {
     const id = str(t.id)
     if (!id || x === null || y === null) continue
     const status: TableStatus = t.status === 'mine' || t.status === 'taken' ? t.status : 'free'
-    tables.push({ id, label: str(t.label) || '?', capacity: num(t.capacity) ?? 0, x, y, status })
+    tables.push({ id, label: str(t.label) || '?', capacity: num(t.capacity) ?? 0, deposit: num(t.deposit) ?? 0, x, y, status })
   }
   const mb = p.myBooking && typeof p.myBooking === 'object' ? (p.myBooking as Record<string, unknown>) : null
   const hallImage = str(p.hallImage)
@@ -173,7 +173,11 @@ export default function Booking() {
   const event = events?.find((e) => e.id === eventId) ?? null
   const table = plan?.tables.find((t) => t.id === tableId) ?? null
   const mine = plan?.myBooking && ACTIVE.includes(plan.myBooking.status) ? plan.myBooking : null
+  // депозит у каждого стола свой (стол 9 — дороже): plan.deposit — наименьший («от N ₽»)
   const deposit = plan?.deposit ?? 0
+  const sameDeposit = !!plan && plan.tables.every((t) => t.deposit === plan.tables[0]?.deposit)
+  const tableDeposit = table?.deposit ?? 0
+  const mineDeposit = (mine && plan?.tables.find((t) => t.id === mine.tableId)?.deposit) || deposit
   const waitingPayment = !!mine && mine.status === 'pending' && !mine.paid
 
   // только асинхронные setState — сброс состояния делают обработчики (retryEvents, pickEvent)
@@ -287,7 +291,7 @@ export default function Booking() {
       const booking = await api<{ id: string; deposit?: number }>(`/events/${eventId}/bookings`, {
         method: 'POST',
         token: auth,
-        body: { tableId, ...(comment.trim() ? { comment: comment.trim() } : {}), ...(deposit > 0 ? { pay: true } : {}) },
+        body: { tableId, ...(comment.trim() ? { comment: comment.trim() } : {}), ...(tableDeposit > 0 ? { pay: true } : {}) },
       })
       if ((booking.deposit ?? 0) > 0) {
         await pay(auth, booking.id)
@@ -398,7 +402,7 @@ export default function Booking() {
   async function onCancel() {
     if (!mine || !token || !eventId) return
     const ask = mine.paid
-      ? `Снять бронь стола ${mine.tableLabel}? Депозит ${rub(deposit)} вернём.`
+      ? `Снять бронь стола ${mine.tableLabel}? Депозит ${rub(mineDeposit)} вернём.`
       : `Снять бронь стола ${mine.tableLabel}?`
     if (!window.confirm(ask)) return
     setBusy(true)
@@ -407,7 +411,7 @@ export default function Booking() {
       const res = await api<{ refund?: boolean; amount?: number }>(`/bookings/${mine.id}`, { method: 'DELETE', token })
       setJustBooked(false)
       if (res.refund) {
-        setNotice(`Бронь снята. Депозит ${rub(res.amount ?? deposit)} вернём тем же способом оплаты в течение 10 дней.`)
+        setNotice(`Бронь снята. Депозит ${rub(res.amount ?? mineDeposit)} вернём тем же способом оплаты в течение 10 дней.`)
       }
     } catch (err) {
       fail(err)
@@ -428,7 +432,7 @@ export default function Booking() {
           <p className="mt-5 text-lg text-white/65 max-w-2xl">
             {/* до загрузки плана (или без вечеринок) — сумма из текстов сайта */}
             {(plan ? deposit : TABLE_DEPOSIT) > 0
-              ? `Депозит ${rub(plan ? deposit : TABLE_DEPOSIT)} за стол — засчитаем в счёт бара. Выбери вечеринку и стол на плане зала, подтверди номер телефона и оплати — бронь подтвердится сразу.`
+              ? `Депозит за стол — ${plan && sameDeposit ? '' : 'от '}${rub(plan ? deposit : TABLE_DEPOSIT)}, засчитаем в счёт бара. Выбери вечеринку и стол на плане зала, подтверди номер телефона и оплати — бронь подтвердится сразу.`
               : 'Выбери вечеринку и стол на плане зала, подтверди номер телефона — бронь подтвердится сразу.'}
           </p>
         </Reveal>
@@ -523,12 +527,12 @@ export default function Booking() {
                     ) : null}
                     <p className="text-white/70">
                       {mine.holdUntil ? `Держим стол до ${clock(mine.holdUntil)}. ` : ''}
-                      Оплати депозит {rub(deposit)} — бронь подтвердится, а деньги засчитаем в счёт бара. Уже
+                      Оплати депозит {rub(mineDeposit)} — бронь подтвердится, а деньги засчитаем в счёт бара. Уже
                       оплатил — подтверждение появится здесь через минуту.
                     </p>
                     <div className="flex flex-wrap items-center gap-3">
                       <button type="button" className="btn btn-acid" disabled={busy} onClick={onPay}>
-                        {busy ? 'Открываю оплату…' : `Оплатить ${rub(deposit)}`}
+                        {busy ? 'Открываю оплату…' : `Оплатить ${rub(mineDeposit)}`}
                       </button>
                       <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={onCancel}>
                         Отменить
@@ -547,7 +551,7 @@ export default function Booking() {
                     ) : null}
                     {mine.paid ? (
                       <p className="text-white/80">
-                        Депозит {rub(deposit)} оплачен — засчитаем в счёт бара. Отменишь до начала вечеринки — вернём.
+                        Депозит {rub(mineDeposit)} оплачен — засчитаем в счёт бара. Отменишь до начала вечеринки — вернём.
                       </p>
                     ) : null}
                     <p className="text-white/70">
@@ -677,7 +681,7 @@ export default function Booking() {
                       aria-label="Дата рождения"
                     />
                     <button type="submit" className="btn btn-acid self-start" disabled={busy}>
-                      {busy ? 'Бронирую…' : deposit > 0 ? `Перейти к оплате ${rub(deposit)}` : 'Забронировать'}
+                      {busy ? 'Бронирую…' : tableDeposit > 0 ? `Перейти к оплате ${rub(tableDeposit)}` : 'Забронировать'}
                     </button>
                   </form>
                 ) : table ? (
@@ -686,9 +690,9 @@ export default function Booking() {
                     <p className="text-fog">
                       До {table.capacity} гостей{event ? `. ${event.title}, ${dayLabel(event.date)}` : ''}
                     </p>
-                    {deposit > 0 ? (
+                    {tableDeposit > 0 ? (
                       <p className="text-white/80">
-                        Депозит {rub(deposit)} — засчитаем в счёт бара. Отменишь до начала вечеринки — вернём.
+                        Депозит {rub(tableDeposit)} — засчитаем в счёт бара. Отменишь до начала вечеринки — вернём.
                       </p>
                     ) : null}
                     <textarea
@@ -699,7 +703,7 @@ export default function Booking() {
                       aria-label="Пожелания к брони"
                     />
                     <button type="button" className="btn btn-acid self-start" disabled={busy} onClick={onBook}>
-                      {busy ? 'Бронирую…' : deposit > 0 ? `Забронировать за ${rub(deposit)}` : 'Забронировать'}
+                      {busy ? 'Бронирую…' : tableDeposit > 0 ? `Забронировать за ${rub(tableDeposit)}` : 'Забронировать'}
                     </button>
                   </div>
                 ) : (
@@ -711,7 +715,7 @@ export default function Booking() {
                     </p>
                     <p className="text-sm text-dim">
                       {deposit > 0
-                        ? `Депозит ${rub(deposit)} засчитаем в счёт бара. Передумал до начала вечеринки — снимешь бронь здесь же, деньги вернём.`
+                        ? `Депозит за стол — ${sameDeposit ? '' : 'от '}${rub(deposit)}, засчитаем в счёт бара. Передумал до начала вечеринки — снимешь бронь здесь же, деньги вернём.`
                         : 'Передумал — снимешь бронь здесь же или в приложении EXIT 13.'}
                     </p>
                   </div>

@@ -1,4 +1,4 @@
-import { CLUBAPP, HOURS, TABLE_DEPOSIT, VENUE } from '../data'
+import { CLUBAPP, HOURS, TABLE_DEPOSIT_TEXT, VENUE } from '../data'
 import { scrollToId } from '../lib/scroll'
 
 // Карточка клуба в Яндекс Картах (организация «Exit13»): метка на клубе, а не на доме
@@ -29,6 +29,9 @@ export default function Info() {
               ))}
             </tbody>
           </table>
+          <p className="mt-4 text-sm text-dim">
+            Со вторника по четверг: бизнес-ланчи с 14:00 до 17:00 (450 ₽), кино-вечера с 20:00 до полуночи.
+          </p>
 
           <dl className="mt-10 grid gap-x-10 gap-y-6 sm:grid-cols-2">
             <div>
@@ -44,7 +47,7 @@ export default function Info() {
             <div className="sm:col-span-2">
               <dt className="font-display text-base font-medium text-text">Столы</dt>
               <dd className="mt-1.5 text-white/65">
-                Бронь столов с внесением депозита {TABLE_DEPOSIT} ₽ — засчитаем в счёт бара. Забронировать —{' '}
+                Бронь столов с внесением депозита {TABLE_DEPOSIT_TEXT} — засчитаем в счёт бара. Забронировать —{' '}
                 <a
                   href="#booking"
                   onClick={(e) => {

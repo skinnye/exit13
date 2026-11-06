@@ -6,17 +6,18 @@ export default function Bar() {
       <div className="container-x">
         <div className="max-w-3xl">
           <h2 className="section-title">
-            Вечером бар,
+            Днём ланчи, вечером кино,
             <br />
             ночью танцпол
           </h2>
           <p className="mt-6 max-w-2xl text-lg text-white/70">
-            Со вторника по четверг — уютный пивной бар у Площади 1905 года: пиво и закуски. А в пятницу
-            и субботу с 22:00 гаснет свет, включается звук, и EXIT 13 превращается в танцпол до шести утра.
+            Со вторника по четверг EXIT 13 — бар и кухня у Площади 1905 года: днём бизнес-ланчи, вечером
+            кино. А в пятницу и субботу с 22:00 гаснет свет, включается звук, и клуб превращается в танцпол
+            до шести утра.
           </p>
         </div>
 
-        <dl className="mt-14 grid gap-x-10 gap-y-8 sm:grid-cols-3">
+        <dl className="mt-14 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
           {BAR_FEATURES.map((f) => (
             <div key={f.t}>
               <dt className="font-display text-lg font-medium text-text">{f.t}</dt>
