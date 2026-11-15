@@ -21,6 +21,8 @@ const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
 const WEEKDAYS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб']
 
+type EntryType = 'deposit' | 'ticket'
+
 type Show = {
   key: string
   date: string // YYYY-MM-DD
@@ -30,6 +32,9 @@ type Show = {
   lineup: string[]
   priceEarly?: number
   priceLate?: number
+  // Вид входа (решение клуба 2026-11-15): 'deposit' — вечеринки клуба, депозит от N ₽ (+20%, в счёт
+  // бара); 'ticket' — вечеринки промоутеров, билет по фиксированной цене. Нет в ответе API — депозит.
+  entryType?: EntryType
   poster?: string
   badge?: string
 }
@@ -83,6 +88,7 @@ function parseEvents(data: unknown): Show[] {
       lineup,
       priceEarly: price(e.priceEarly),
       priceLate: price(e.priceLate),
+      entryType: e.entryType === 'ticket' ? 'ticket' : 'deposit',
       poster: poster(e.imageUrl),
     })
   }
@@ -113,13 +119,14 @@ const NOTE: Record<State['status'], string> = {
 
 const rub = (n: number) => `${new Intl.NumberFormat('ru-RU').format(n)} ₽`
 
-// Вход депозитный (решение клуба 2026-11-06): одна сумма — минимальный депозит, гость выбирает
-// сумму не меньше; деления «до/после 01:00» нет.
-function PriceLine({ early }: { early?: number; late?: number }) {
+// Вход на вечеринку клуба — депозит (решение клуба 2026-11-06): одна сумма — минимальный депозит,
+// гость выбирает сумму не меньше; деления «до/после 01:00» нет. Вечеринка промоутеров — билет
+// (2026-11-15): цена фиксированная, priceEarly.
+function PriceLine({ early, entryType }: { early?: number; late?: number; entryType?: EntryType }) {
   if (!early) return <span className="text-fog">Цена — в приложении</span>
   return (
     <span className="whitespace-nowrap">
-      депозит от <span className="text-acid">{rub(early)}</span>
+      {entryType === 'ticket' ? 'вход' : 'депозит от'} <span className="text-acid">{rub(early)}</span>
     </span>
   )
 }
@@ -176,7 +183,7 @@ function EventRow({ e, past, index }: { e: Show; past: boolean; index: number })
 
         {!past && (
           <div className="tabular-nums text-sm text-text md:text-right">
-            <PriceLine early={e.priceEarly} late={e.priceLate} />
+            <PriceLine early={e.priceEarly} late={e.priceLate} entryType={e.entryType} />
           </div>
         )}
       </div>
@@ -227,6 +234,8 @@ export default function Events() {
   const live = state.status === 'upcoming'
   const list = state.status === 'upcoming' || state.status === 'recent' ? state.events : ARCHIVE
   const listTitle = live ? 'Ближайшие вечеринки' : state.status === 'recent' ? 'Недавние вечеринки' : 'Из архива'
+  const hasDeposit = live && list.some((e) => e.entryType !== 'ticket')
+  const hasTicket = live && list.some((e) => e.entryType === 'ticket')
 
   return (
     <section id="afisha" className="section relative bg-ink hairline">
@@ -265,11 +274,14 @@ export default function Events() {
         </div>
 
         <div className="mt-6 space-y-1.5 text-sm text-dim">
-          {live && (
+          {hasDeposit && (
             <p>
               Вход — депозит от 1 000 ₽ на гостя: сумму выбираешь сам, к ней сразу +20%, и всё идёт в счёт бара.
               Платишь 1 000 ₽ — на депозите 1 200 ₽.
             </p>
+          )}
+          {hasTicket && (
+            <p>На вечеринки промоутеров — билет: цена фиксированная, без +20%, в счёт бара не идёт.</p>
           )}
           <p>
             {CLUBAPP.payment.online} {CLUBAPP.payment.onsite}
