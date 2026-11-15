@@ -13,7 +13,8 @@ import Reveal from './Reveal'
 // после входа — личный (/events/:id/tables: видна своя бронь, её можно снять).
 // Данные API попадают в DOM только как текст (React экранирует).
 
-type Ev = { id: string; date: string; time: string; title: string }
+// ticket — вход по билету (вечеринка промоутеров): депозит стола вход НЕ включает (решение клуба 2026-11-16)
+type Ev = { id: string; date: string; time: string; title: string; ticket: boolean }
 type TableStatus = 'free' | 'taken' | 'mine'
 type HallTable = { id: string; label: string; capacity: number; deposit: number; x: number; y: number; status: TableStatus }
 // orderAmount — сумма заказа по брони (оплаченного или открытого): депозит стола могли поменять после
@@ -68,7 +69,13 @@ function parseEvents(data: unknown): Ev[] {
     const date = str(e.date)
     if (!id || !DATE_RE.test(date) || date < today) continue
     const time = str(e.timeStart)
-    out.push({ id, date, time: TIME_RE.test(time) ? time : '', title: str(e.title) || 'Вечеринка EXIT 13' })
+    out.push({
+      id,
+      date,
+      time: TIME_RE.test(time) ? time : '',
+      title: str(e.title) || 'Вечеринка EXIT 13',
+      ticket: e.entryType === 'ticket',
+    })
   }
   return out.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)).slice(0, MAX_EVENTS)
 }
@@ -538,7 +545,7 @@ export default function Booking() {
           <p className="mt-5 text-lg text-white/65 max-w-2xl">
             {/* до загрузки плана (или без вечеринок) — сумма из текстов сайта */}
             {(plan ? deposit : TABLE_DEPOSIT) > 0
-              ? `Депозит за стол — ${plan && sameDeposit ? '' : 'от '}${rub(plan ? deposit : TABLE_DEPOSIT)}: он включает вход для компании по числу мест за столом и засчитывается в счёт бара. Выбери вечеринку и стол на плане зала, подтверди номер телефона и оплати депозит — бронь подтвердится сразу. Неоплаченный стол держим ${BOOKING_HOLD_MINUTES} минут.`
+              ? `Депозит за стол — ${plan && sameDeposit ? '' : 'от '}${rub(plan ? deposit : TABLE_DEPOSIT)}: он включает вход для компании по числу мест за столом (на вечеринки промоутеров со входом по билету билет оплачивается отдельно) и засчитывается в счёт бара. Выбери вечеринку и стол на плане зала, подтверди номер телефона и оплати депозит — бронь подтвердится сразу. Неоплаченный стол держим ${BOOKING_HOLD_MINUTES} минут.`
               : 'Выбери вечеринку и стол на плане зала, подтверди номер телефона — бронь подтвердится сразу.'}
           </p>
         </Reveal>
@@ -800,7 +807,10 @@ export default function Booking() {
                     </p>
                     {tableDeposit > 0 ? (
                       <p className="text-white/80">
-                        Депозит {rub(tableDeposit)} — засчитаем в счёт бара, вход для {table.capacity} гостей включён.
+                        Депозит {rub(tableDeposit)} — засчитаем в счёт бара,{' '}
+                        {event?.ticket
+                          ? 'вход по билету оплачивается отдельно.'
+                          : `вход для ${table.capacity} гостей включён.`}{' '}
                         Оплатить нужно за {BOOKING_HOLD_MINUTES} минут — иначе бронь снимется. Отменишь до начала
                         вечеринки — вернём.
                       </p>
