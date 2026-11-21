@@ -452,7 +452,8 @@ export const GENRES = [
 // API клуба: '' — тот же origin (app.exit13.space и локальный dev-прокси), на GitHub Pages —
 // абсолютный адрес app.exit13.space (см. vite.config.ts).
 export const API_BASE = __API_BASE__
-export const EVENTS_API = `${API_BASE}/events`
+// ?all=1 — с прошедшими (для архива «прошло»): без параметра сервер отдаёт только предстоящие.
+export const EVENTS_API = `${API_BASE}/events?all=1`
 
 export type ArchiveEvent = {
   date: string // YYYY-MM-DD
